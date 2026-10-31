@@ -1,0 +1,8 @@
+project_id = "smart-reminder"
+
+# ฟังก์ชันสองตัวนี้ตรวจสิทธิ์เองในโค้ด (ตรวจ JWT ของผู้ใช้ / ตรวจ cron secret)
+[functions.send-due]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false

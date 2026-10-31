@@ -1,0 +1,1019 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Reminder</title>
+<meta name="theme-color" content="#2f6b3f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Smart Reminder">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=Prompt:wght@600;700&display=swap">
+<style>
+/* Layout: single-column mobile app, sticky header, floating glass nav pill at the bottom. Green palette carried over from the original app. */
+:root{
+  --bg:#f3f8f2; --header:#eaf4e8; --primary:#2f6b3f; --on-primary:#ffffff; --soft:#e6f2e4; --text:#1f2a24; --muted:#657469;
+  --line:#e3ece2; --card:#ffffff; --field:#fafcfa; --chip:#eef6ec; --tint:#f0faf5; --hero:#eef7ec; --hero-text:#3e5446;
+  --wheel-muted:#a7b4aa; --faint:#7f8c84; --switch-off:#d0d5dd; --danger:#d4614a; --warn-bg:#fff4e5; --warn-line:#f5c26b; --warn-text:#8a5a00;
+  --nav-bg:rgba(255,255,255,.72); --nav-line:rgba(255,255,255,.8); --nav-on:rgba(47,107,63,.16); --scrim:rgba(0,0,0,.35);
+  --shadow:0 8px 24px rgba(20,40,28,.16);
+  --font-display:"Prompt","Noto Sans Thai",system-ui,sans-serif; --font-body:"Noto Sans Thai",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121a15; --header:#18231c; --primary:#46a463; --on-primary:#0c1710; --soft:#24352a; --text:#e8f0ea; --muted:#9db0a3;
+  --line:#2a3a2f; --card:#1b2620; --field:#16201a; --chip:#24352a; --tint:#1f2e25; --hero:#21402c; --hero-text:#c5d9cb;
+  --wheel-muted:#4f6355; --faint:#7d8f83; --switch-off:#3a4a3f; --danger:#e8806a; --warn-bg:#33291a; --warn-line:#6b5420; --warn-text:#f0c987;
+  --nav-bg:rgba(30,42,34,.7); --nav-line:rgba(255,255,255,.16); --nav-on:rgba(255,255,255,.18); --scrim:rgba(0,0,0,.6);
+  --shadow:0 8px 24px rgba(0,0,0,.5); color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#121a15; --header:#18231c; --primary:#46a463; --on-primary:#0c1710; --soft:#24352a; --text:#e8f0ea; --muted:#9db0a3;
+  --line:#2a3a2f; --card:#1b2620; --field:#16201a; --chip:#24352a; --tint:#1f2e25; --hero:#21402c; --hero-text:#c5d9cb;
+  --wheel-muted:#4f6355; --faint:#7d8f83; --switch-off:#3a4a3f; --danger:#e8806a; --warn-bg:#33291a; --warn-line:#6b5420; --warn-text:#f0c987;
+  --nav-bg:rgba(30,42,34,.7); --nav-line:rgba(255,255,255,.16); --nav-on:rgba(255,255,255,.18); --scrim:rgba(0,0,0,.6);
+  --shadow:0 8px 24px rgba(0,0,0,.5); color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--header);z-index:30}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input{font:inherit;color:var(--text)}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.ic{display:inline-block;vertical-align:middle;flex:none}
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance}
+p{margin:0}
+
+.shell{max-width:560px;margin:0 auto}
+.header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--header);border-bottom:1px solid var(--line);
+  padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.header-in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:8px}
+.brand{flex:1;min-width:0}
+.brand h1{font-size:20px;display:flex;align-items:center;gap:8px;color:var(--text)}
+.brand p{font-size:12.5px;color:var(--muted)}
+.round{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);position:relative}
+.dot{position:absolute;top:9px;right:10px;width:9px;height:9px;border-radius:50%;background:var(--danger);border:1.5px solid var(--card)}
+.avatar{border-radius:50%;display:grid;place-items:center;flex:none}
+
+main{padding-block:14px 130px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;min-width:0}
+.card h2{font-size:17px;margin-bottom:8px}
+.h-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--primary)}
+.h-row h2{margin:0;color:var(--text)}
+.p{color:var(--muted);font-size:14px}
+.note{font-size:13px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--soft);color:var(--primary);font-weight:600;font-size:13px;border-radius:99px;padding:4px 12px;margin-bottom:10px}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;border-radius:14px;padding:12px 16px;font-weight:600;margin-top:10px;min-height:46px}
+.btn.primary{background:var(--primary);color:var(--on-primary)}
+.btn.secondary{background:var(--soft);color:var(--text);border:1px solid var(--line)}
+.btn[disabled]{opacity:.5;cursor:default}
+.link{font-size:13px;color:var(--faint);text-decoration:underline;margin-top:8px;display:inline-block;padding:6px 0}
+
+.top-row{display:grid;grid-template-columns:1.15fr 1fr;gap:10px}
+.hero{position:relative;overflow:hidden;background:var(--hero);border-radius:20px;padding:14px;min-height:175px;min-width:0}
+.hero.tall{min-height:215px}
+.hero .greet{display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:17px;color:#1f2a24}
+:root[data-theme="dark"] .hero .greet,:root[data-theme="dark"] .hero p{color:var(--text)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hero .greet,:root:not([data-theme="light"]) .hero p{color:var(--text)}}
+.hero p{font-size:13px;color:var(--hero-text);margin-top:4px;line-height:1.6;max-width:90%}
+.hero .art{position:absolute;right:-6px;bottom:-8px;opacity:.9;color:var(--primary)}
+.hero .art .ic{width:92px;height:92px;stroke-width:1.2}
+.sum{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px;min-width:0}
+.sum h3{font-size:15px}
+.sum .sub{font-size:12px;color:var(--muted);margin:2px 0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sum-row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px;color:var(--muted)}
+.sum-row i{width:8px;height:8px;border-radius:50%;display:block}
+.sum-row span{flex:1}
+.sum-row b{font-size:15px;color:var(--text);font-variant-numeric:tabular-nums}
+
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tile{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;font-weight:600;min-width:0}
+.tile .ti{width:58px;height:58px;border-radius:18px;display:grid;place-items:center}
+.tile span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.rem{display:flex;align-items:center;gap:4px;padding:10px 0;border-bottom:1px solid var(--line)}
+.rem.on{background:var(--bg);border-radius:12px;padding-inline:6px}
+.rem-main{flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left}
+.rem-time{background:var(--soft);color:var(--primary);font-family:var(--font-display);font-size:19px;border-radius:14px;padding:8px 11px;font-variant-numeric:tabular-nums}
+.rem-body{min-width:0;flex:1}
+.rem-title{font-weight:600;display:flex;align-items:center;gap:6px;min-width:0}
+.rem-title span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rem-body .note{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icon-btn{padding:8px;display:grid;place-items:center;border-radius:10px}
+.more{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;padding:10px;color:var(--primary);font-weight:600;font-size:14px}
+
+.inrow{display:flex;gap:8px;margin-top:8px}
+.input{flex:1;min-width:0;border:1px solid var(--line);background:var(--field);border-radius:12px;padding:10px 12px;font-size:15px;width:100%}
+.input::placeholder{color:var(--faint)}
+.go{background:var(--primary);color:var(--on-primary);border-radius:12px;padding:0 14px;font-weight:700;flex:none;min-height:44px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{background:var(--chip);border-radius:99px;padding:6px 12px;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.result{margin-top:10px;padding:12px;border-radius:14px;background:var(--tint)}
+.result h3{font-size:16px;color:var(--primary);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.result li,.det-list li{margin:2px 0}
+.result ul,.det-list{margin:6px 0 0;padding-left:20px}
+.stat-line{padding:3px 0;color:var(--muted);font-size:14px}
+.stat-line b{color:var(--text)}
+
+.title-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.title-row h2{flex:1;margin:0;min-width:0}
+.pill{background:var(--soft);color:var(--primary);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.progress{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:8px 0}
+.progress i{display:block;height:100%;background:var(--primary);border-radius:99px;transition:width .25s}
+.item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.cb{width:24px;height:24px;border-radius:8px;border:2px solid var(--faint);display:grid;place-items:center;flex:none;color:var(--on-primary)}
+.cb.on{background:var(--primary);border-color:var(--primary)}
+.item .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.item.done .t{color:var(--faint);text-decoration:line-through}
+.rm{color:var(--faint);padding:6px}
+.warn{margin-top:10px;padding:12px;border-radius:12px;background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn-text);font-size:14px}
+.stats{display:flex;align-items:center;background:var(--bg);border-radius:16px;padding:12px 0;margin-top:16px}
+.stats>div{flex:1;text-align:center}
+.stats .div{flex:none;width:1px;height:28px;background:var(--line)}
+.stats b{font-family:var(--font-display);font-size:18px;display:block}
+.stats small{font-size:12px;color:var(--muted)}
+.ring{display:block;margin:0 auto}
+
+.label{font-weight:700;margin:16px 0 6px;font-size:15px}
+.quick{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.quick button{background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:8px 14px;font-size:13px}
+.switch-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+.switch{width:50px;height:30px;border-radius:99px;background:var(--switch-off);position:relative;transition:background .15s;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch[aria-checked="true"]{background:var(--primary)}
+.switch[aria-checked="true"]::after{transform:translateX(20px)}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px}
+.day{height:40px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-weight:600;font-size:13px}
+.day.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.edit-item{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.edit-item span{flex:1;min-width:0;overflow-wrap:anywhere}
+
+.wheel-wrap{position:relative;display:flex;align-items:center;justify-content:center;margin:12px 0;background:var(--bg);border-radius:18px;overflow:hidden}
+.wheel-hl{position:absolute;left:24px;right:24px;height:48px;border-radius:12px;background:var(--soft);pointer-events:none}
+.wheel{position:relative;height:240px;width:80px;overflow-y:auto;scroll-snap-type:y mandatory;scroll-padding-block:96px;padding-block:96px;scrollbar-width:none;overscroll-behavior:contain}
+.wheel::-webkit-scrollbar{display:none}
+.wheel div{height:48px;display:grid;place-items:center;scroll-snap-align:start;font-size:24px;color:var(--wheel-muted);font-variant-numeric:tabular-nums}
+.wheel div.on{font-size:30px;font-weight:700;color:var(--text)}
+.colon{font-size:30px;font-weight:700;margin:0 4px;position:relative}
+
+.nav-pill{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:20;display:flex;justify-content:center;pointer-events:none;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.nav-glass{pointer-events:auto;width:100%;max-width:420px;height:68px;display:flex;gap:4px;padding:6px;border-radius:34px;background:var(--nav-bg);border:1px solid var(--nav-line);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:var(--shadow)}
+.nav-btn{flex:1;border-radius:28px;display:grid;place-items:center;color:var(--text)}
+.nav-btn.on{background:var(--nav-on);color:var(--primary)}
+
+.toast{position:fixed;left:50%;transform:translate(-50%,8px);bottom:calc(env(safe-area-inset-bottom,0px) + 92px);z-index:60;background:var(--text);color:var(--bg);border-radius:14px;padding:10px 16px;font-size:14px;max-width:min(90vw,420px);text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.scrim{position:fixed;inset:0;z-index:40;background:var(--scrim);display:flex;align-items:center;justify-content:center;padding:20px}
+.scrim.menu{align-items:flex-start;justify-content:flex-end;background:rgba(0,0,0,.28)}
+.menu-card{width:270px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow);margin-top:calc(env(safe-area-inset-top,0px) + 62px)}
+.menu-head{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.menu-head b{font-family:var(--font-display);font-size:16px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px}
+.menu-head small{color:var(--muted);font-size:12px}
+.menu-row{display:flex;align-items:center;gap:10px;padding:12px 0;font-weight:600;width:100%;text-align:left;color:var(--text)}
+.menu-row span{flex:1}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{border-radius:12px;padding:9px 4px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;gap:5px}
+.seg button.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.modal{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;width:100%;max-width:440px;max-height:90%;overflow:auto}
+.modal-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px}
+.modal-head h2{flex:1;font-size:18px;margin:0}
+.det-row{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.det-row span{width:88px;color:var(--muted);flex:none}
+.det-row b{flex:1;min-width:0;overflow-wrap:anywhere}
+.avatars{display:flex;flex-wrap:wrap;gap:12px;margin-top:4px}
+.avatars button{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;border:2px solid transparent}
+.avatars button.on{border-color:var(--primary)}
+
+.ob{text-align:center}
+.ob h2{font-size:20px;margin:10px 0 6px}
+.ob .left{text-align:left}
+.ob-hero{width:170px;height:170px;margin:6px auto;position:relative;display:grid;place-items:center}
+.ob-hero i{position:absolute;border-radius:50%;background:var(--soft)}
+.ob-hero i:nth-child(1){width:170px;height:170px;opacity:.55}
+.ob-hero i:nth-child(2){width:132px;height:132px}
+.ob-hero .core{position:relative;width:94px;height:94px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;box-shadow:0 6px 14px rgba(47,107,63,.35)}
+.feat{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px}
+.step{display:flex;align-items:center;gap:12px;margin:12px 0;text-align:left}
+.step .si{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;flex:none;position:relative}
+.step .si b{position:absolute;top:-5px;left:-5px;width:18px;height:18px;border-radius:50%;background:var(--primary);color:var(--on-primary);font-size:11px;display:grid;place-items:center}
+.perm{margin-top:14px;padding:12px;border-radius:14px;background:var(--tint);text-align:left}
+.dots{display:flex;justify-content:center;gap:8px;margin:14px 0 4px}
+.dots i{width:8px;height:8px;border-radius:4px;background:var(--switch-off)}
+.dots i.on{width:20px;background:var(--primary)}
+.alert-ic{width:64px;height:64px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;margin:0 auto 10px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media (max-width:360px){.top-row{grid-template-columns:1fr}.tiles{gap:4px}.tile .ti{width:50px;height:50px}}
+.btn.danger{background:transparent;color:var(--danger);border:1.5px solid var(--danger)}
+.btn.danger[disabled]{opacity:.5}
+body{margin:0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+(function(){
+"use strict";
+
+/* ---------- storage (per viewer, falls back to memory) ---------- */
+var mem = {};
+var LS = {
+  get: function(k, d){ try { var v = localStorage.getItem("sr:"+k); if (v != null) return JSON.parse(v); } catch(e){} return (k in mem) ? mem[k] : d; },
+  set: function(k, v){ mem[k] = v; try { localStorage.setItem("sr:"+k, JSON.stringify(v)); } catch(e){} }
+};
+
+/* ---------- icons ---------- */
+var P = {
+  home:'<path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  checksq:'<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  bell:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  down:'<polyline points="6 9 12 15 18 9"/>', up:'<polyline points="18 15 12 9 6 15"/>', right:'<polyline points="9 18 15 12 9 6"/>',
+  back:'<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>',
+  moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  phone:'<rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+  book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+  brief:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  plane:'<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+  run:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+  chart:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  smile:'<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+  leaf:'<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.5 2 8 0 5.5-4.8 10-10 10z"/><path d="M2 21c0-3 1.9-5.4 5.1-6.9"/>',
+  heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',
+  globe:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z"/>',
+  zap:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  coffee:'<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>',
+  info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  drop:'<path d="M12 2.7l5.7 5.7a8 8 0 1 1-11.3 0z"/>',
+  monitor:'<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+  medic:'<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',
+  bag:'<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  help:'<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  monitorsys:'<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'
+};
+function ic(n, s, sw){ s = s || 20; return '<svg class="ic" width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(sw||2)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(P[n]||P.help)+'</svg>'; }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+/* ---------- constants ---------- */
+var LIGHT_SWITCH = null;
+var ACTIVITIES = [
+  { name:"เรียน", icon:"book", bg:"#e3f1e2", fg:"#2f6b3f" },
+  { name:"ทำงาน", icon:"brief", bg:"#fdebd8", fg:"#b8681a" },
+  { name:"เดินทาง", icon:"plane", bg:"#e1edf9", fg:"#2f6fb0" },
+  { name:"ออกกำลังกาย", icon:"run", bg:"#efe6f8", fg:"#7c4dbb" }
+];
+var DAYS = [{label:"จ.",wd:2},{label:"อ.",wd:3},{label:"พ.",wd:4},{label:"พฤ.",wd:5},{label:"ศ.",wd:6},{label:"ส.",wd:7},{label:"อา.",wd:1}];
+var ALL_DAYS = [1,2,3,4,5,6,7];
+var DATA = {
+  "เรียน":["โทรศัพท์","กระเป๋า","สมุด/หนังสือ","ปากกา","บัตรนักเรียน","ที่ชาร์จ"],
+  "ทำงาน":["โทรศัพท์","กระเป๋า","โน้ตบุ๊ก","ที่ชาร์จ","บัตรพนักงาน","เอกสาร"],
+  "เดินทาง":["โทรศัพท์","กระเป๋าสตางค์","บัตรประชาชน/พาสปอร์ต","ที่ชาร์จ","เสื้อผ้า","ของใช้ส่วนตัว"],
+  "ออกกำลังกาย":["ชุดกีฬา","รองเท้า","ขวดน้ำ","ผ้าเช็ดตัว","หูฟัง","โทรศัพท์"]
+};
+var EXTRA = [
+  { keys:["ทะเล","เกาะ","ชายหาด","ว่ายน้ำ"], name:"ทะเล", icon:"drop", items:["ชุดว่ายน้ำ","ครีมกันแดด","หมวก/แว่นกันแดด","ผ้าเช็ดตัว","รองเท้าแตะ","โทรศัพท์","กระเป๋าสตางค์"] },
+  { keys:["ประชุม","พรีเซนต์","นำเสนอ","สัมภาษณ์"], name:"ประชุม", icon:"monitor", items:["โน้ตบุ๊ก","ที่ชาร์จ","เอกสาร/สไลด์","ปากกา","บัตรพนักงาน","โทรศัพท์"] },
+  { keys:["หมอ","โรงพยาบาล","โรงบาล","คลินิก","ทันตแพทย์","ทำฟัน","ตรวจสุขภาพ"], name:"หาหมอ", icon:"medic", items:["บัตรประชาชน","บัตรประกัน/สิทธิ์รักษา","ใบนัด/เอกสารการรักษา","ยาที่ใช้ประจำ","กระเป๋าสตางค์","โทรศัพท์"] },
+  { keys:["ช้อป","ห้าง","ซื้อของ","ตลาด","ซูเปอร์"], name:"ช้อปปิ้ง", icon:"bag", items:["กระเป๋าสตางค์","ถุงผ้า","รายการที่จะซื้อ","โทรศัพท์","บัตรสมาชิก/คูปอง"] }
+];
+var MAIN_KEYS = {
+  "เรียน":["เรียน","โรงเรียน","มหาวิทยาลัย","มหาลัย","สอบ","คาบ","ติว","มหา"],
+  "ทำงาน":["ทำงาน","ออฟฟิศ","งาน","บริษัท"],
+  "เดินทาง":["เดินทาง","เที่ยว","ท่องเที่ยว","สนามบิน","ขึ้นเครื่อง","ต่างจังหวัด","ทริป","บิน"],
+  "ออกกำลังกาย":["ออกกำลัง","ฟิตเนส","วิ่ง","โยคะ","ยิม","เตะบอล","ปั่น","กีฬา"]
+};
+var GENERIC_ITEMS = ["โทรศัพท์","กระเป๋าสตางค์","กุญแจ","ที่ชาร์จ"];
+var AVATARS = [
+  {icon:"user",bg:"#e3f1e2",fg:"#2f6b3f"},{icon:"smile",bg:"#fdebd8",fg:"#b8681a"},{icon:"leaf",bg:"#dff0dc",fg:"#3d8b4f"},{icon:"coffee",bg:"#efe6f8",fg:"#7c4dbb"},
+  {icon:"zap",bg:"#e1edf9",fg:"#2f6fb0"},{icon:"star",bg:"#fff3cf",fg:"#a87a0c"},{icon:"heart",bg:"#fde3e1",fg:"#c24540"},{icon:"globe",bg:"#e0f3f1",fg:"#1f8a83"}
+];
+function iconOf(name){ for (var i=0;i<ACTIVITIES.length;i++) if (ACTIVITIES[i].name===name) return ACTIVITIES[i].icon; for (var j=0;j<EXTRA.length;j++) if (EXTRA[j].name===name) return EXTRA[j].icon; return "list"; }
+
+/* ---------- profanity filter ---------- */
+var BAD_WORDS = ["เหี้ย","ควย","เชี่ย","เย็ดแม่","แม่ง","ระยำ","ส้นตีน","ตอแหล","อีดอก","ดอกทอง","ไอ้สัตว์","ชาติหมา","ไอ้สัส","อีสัส","หำ","ตูด","ก้น","hum","hee","kuy","fuck","shit","bitch","asshole","cunt","pussy","dick","bastard","หี","เย็ด","เย้ด","แตด","หมอย"];
+function norm(s){ return s.toLowerCase().replace(/[\s​\-_.,*!?'"()]/g,"").replace(/(.)\1+/g,"$1"); }
+function isLatin(w){ return /^[a-z]+$/i.test(w); }
+var BAD_THAI = BAD_WORDS.filter(function(w){return !isLatin(w);}).map(norm);
+var BAD_LATIN = Array.from(new Set(BAD_WORDS.filter(isLatin).map(function(w){return w.toLowerCase();}))).map(function(w){ return new RegExp("^"+w.split("").map(function(c){return c+"+";}).join("")+"$"); });
+function hasProfanity(text){
+  var n = norm(text);
+  if (BAD_THAI.some(function(w){ return n.indexOf(w) >= 0; })) return true;
+  var words = text.toLowerCase().split(/[^a-z]+/).filter(Boolean);
+  return words.some(function(w){ return BAD_LATIN.some(function(re){ return re.test(w); }); });
+}
+function findActivity(text){
+  var q = text.trim().toLowerCase(), i;
+  for (i=0;i<EXTRA.length;i++){ if (EXTRA[i].keys.some(function(k){return q.indexOf(k)>=0;})) return EXTRA[i]; }
+  for (i=0;i<ACTIVITIES.length;i++){ var a = ACTIVITIES[i]; if (MAIN_KEYS[a.name].some(function(k){return q.indexOf(k)>=0;})) return { name:a.name, icon:a.icon, items:DATA[a.name] }; }
+  return null;
+}
+
+/* ---------- time helpers ---------- */
+function todayKey(){ var d=new Date(); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+function pad2(n){ return String(n).padStart(2,"0"); }
+function greet(){
+  var h = new Date().getHours();
+  if (h>=5 && h<12) return { text:"สวัสดีตอนเช้า", icon:"sun", color:"#e0951a" };
+  if (h>=12 && h<17) return { text:"สวัสดีตอนบ่าย", icon:"sun", color:"#d9731e" };
+  if (h>=17 && h<20) return { text:"สวัสดีตอนเย็น", icon:"moon", color:"#7c6bc4" };
+  return { text:"สวัสดีตอนค่ำ", icon:"moon", color:"#6a7bc5" };
+}
+function nextFireDate(t, days){
+  if (!t || !days || !days.length) return null;
+  var p = t.split(":").map(Number), now = new Date();
+  for (var off=0; off<=7; off++){
+    var d = new Date(now.getFullYear(), now.getMonth(), now.getDate()+off, p[0], p[1], 0, 0);
+    if (d > now && days.indexOf(d.getDay()+1) >= 0) return d;
+  }
+  return null;
+}
+function lastOccurrence(r, now){
+  var p = r.time.split(":").map(Number), n = new Date(now);
+  for (var off=0; off<=7; off++){
+    var d = new Date(n.getFullYear(), n.getMonth(), n.getDate()-off, p[0], p[1], 0, 0);
+    if (d.getTime() <= now && r.days.indexOf(d.getDay()+1) >= 0) return d.getTime();
+  }
+  return null;
+}
+function reminderNext(r){ return r.once ? (r.sentAt ? null : new Date(r.fireAt)) : nextFireDate(r.time, r.days); }
+function formatRemaining(d){
+  if (!d) return null;
+  var mins = Math.max(1, Math.round((d - new Date())/60000));
+  var dd = Math.floor(mins/1440), hh = Math.floor((mins%1440)/60), mm = mins%60;
+  if (dd>0) return "อีก "+dd+" วัน "+hh+" ชม.";
+  if (hh>0) return "อีก "+hh+" ชม. "+mm+" นาที";
+  return "อีก "+mm+" นาที";
+}
+function daysLabel(days){ return days.length===7 ? "ทุกวัน" : DAYS.filter(function(d){return days.indexOf(d.wd)>=0;}).map(function(d){return d.label;}).join(" "); }
+
+/* ---------- state ---------- */
+var S = {
+  screen:"home",
+  profile: LS.get("profile",{name:"ผู้ใช้",avatar:0}),
+  themePref: LS.get("themePref","system"),
+  reminders: [], user:null, booting:true, bootError:"", gate:false, pushOn:false, confirmDelete:false, deleting:false,
+  customItems: LS.get("customItems",{}),
+  removedItems: LS.get("removedItems",{}),
+  stats: LS.get("forgotStats",{}),
+  progress: LS.get("checkProgress",{}),
+  doneDay: LS.get("doneDay",""),
+  onboarded: LS.get("onboarded",false),
+  current: { name:"เดินทาง", icon:"plane" },
+  checked: {},
+  hour: "08", minute: "00",
+  repeat:false, days: ALL_DAYS.slice(), note:"", titleDraft:"",
+  editingId:null, editItems:[], newEditItem:"", detailId:null, showAll:false,
+  query:"", suggestion:null, newItem:"", nameDraft:"",
+  menuOpen:false, obStep:0, obHour:8, obMinute:0, notifGranted:false, alerts:[]
+};
+(function(){ var d = LS.get("defaultTime",null); if (d){ var p = d.split(":"); S.hour=p[0]; S.minute=p[1]; } })();
+
+/* ---------- Supabase ---------- */
+var CFG = window.APP_CONFIG || {};
+var sb = null;
+function cfgOk(){ return CFG.SUPABASE_URL && CFG.SUPABASE_KEY && CFG.ONESIGNAL_APP_ID && CFG.SUPABASE_URL.indexOf("YOUR")<0 && CFG.SUPABASE_KEY.indexOf("YOUR")<0 && CFG.ONESIGNAL_APP_ID.indexOf("YOUR")<0; }
+function rowToR(x){
+  return { id:x.id, time:x.time, once:x.once, days:x.days||[], note:x.note||"", title:x.title||"", label:x.label, icon:x.icon, items:x.items||[],
+    fireAt:x.next_fire_at?Date.parse(x.next_fire_at):null, sentAt:x.sent_at?Date.parse(x.sent_at):null, doneOn:x.done_on||null };
+}
+async function loadReminders(){
+  var res = await sb.from("reminders").select("*").order("created_at");
+  if (res.error){ toast("โหลดข้อมูลไม่สำเร็จ: "+res.error.message); return; }
+  var rows = res.data.map(rowToR), old = rows.filter(function(r){ return r.once && r.sentAt && Date.now()-r.sentAt > 24*3600e3; });
+  if (old.length) sb.from("reminders").delete().in("id", old.map(function(r){return r.id;}));
+  S.reminders = rows.filter(function(r){ return old.indexOf(r) < 0; });
+}
+async function patchReminder(id, dbPatch, localPatch){
+  S.reminders = S.reminders.map(function(r){ return r.id===id ? Object.assign({}, r, localPatch) : r; });
+  var res = await sb.from("reminders").update(dbPatch).eq("id", id);
+  if (res.error) toast("บันทึกไม่สำเร็จ: "+res.error.message);
+}
+async function removeReminder(id){
+  S.reminders = S.reminders.filter(function(r){return r.id!==id;});
+  var res = await sb.from("reminders").delete().eq("id", id);
+  if (res.error) toast("ลบไม่สำเร็จ: "+res.error.message);
+}
+function applyTheme(){
+  var r = document.documentElement;
+  if (S.themePref==="system") r.removeAttribute("data-theme"); else r.setAttribute("data-theme", S.themePref);
+}
+
+/* ---------- checklist data ---------- */
+function progressKey(cur){ return cur.reminderId ? "r:"+cur.reminderId : "a:"+cur.name; }
+function listInfo(){
+  var cur = S.current, own = !!cur.reminderId;
+  var removed = own ? [] : (S.removedItems[cur.name] || []);
+  var base = (cur.items || DATA[cur.name] || GENERIC_ITEMS).filter(function(x){ return removed.indexOf(x) < 0; });
+  var custom = own ? [] : (S.customItems[cur.name] || []);
+  return { own:own, removed:removed, base:base, custom:custom, items:base.concat(custom) };
+}
+function restoreChecked(cur){
+  var saved = S.progress[progressKey(cur)] || {}, out = {};
+  var save = S.current; S.current = cur; var L = listInfo(); S.current = save;
+  L.items.forEach(function(n,i){ if (saved[n]) out[i] = true; });
+  return out;
+}
+function syncProgress(){
+  var L = listInfo(), names = {};
+  L.items.forEach(function(n,i){ if (S.checked[i]) names[n] = true; });
+  var key = progressKey(S.current), next = Object.assign({}, S.progress);
+  if (Object.keys(names).length) next[key] = names; else delete next[key];
+  S.progress = next; LS.set("checkProgress", next);
+}
+
+/* ---------- toast ---------- */
+var toastTimer = null;
+function toast(msg){
+  var el = document.getElementById("toast"); el.textContent = msg; el.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2300);
+}
+
+/* ---------- actions ---------- */
+var focusId = null;
+function go(screen){ S.screen = screen; S.menuOpen = false; render({top:true}); }
+
+function selectActivity(i){
+  var a = ACTIVITIES[i];
+  S.current = { name:a.name, icon:a.icon };
+  S.checked = restoreChecked(S.current);
+  go("check");
+}
+function runSuggest(text){
+  if (!text.trim()){ toast("กรุณาพิมพ์กิจกรรมของวันนี้ก่อน"); return; }
+  if (hasProfanity(text)){ toast("กรุณาใช้คำที่สุภาพ"); return; }
+  var hit = findActivity(text);
+  S.query = text;
+  var cleaned = text.trim().replace(/^ไป\s*/,"").trim() || text.trim();
+  S.suggestion = hit ? { name:hit.name, icon:hit.icon, items:hit.items, matched:true } : { name:cleaned, icon:"help", items:GENERIC_ITEMS, matched:false };
+  render();
+}
+function openAsChecklist(){
+  var s = S.suggestion;
+  S.current = { name:s.name, icon:s.icon, items:s.items };
+  S.checked = restoreChecked(S.current);
+  go("check");
+}
+function toggleItem(i){ S.checked[i] = !S.checked[i]; syncProgress(); render(); }
+
+function setOwnItems(list){
+  S.current = Object.assign({}, S.current, { items:list });
+  var id = S.current.reminderId;
+  if (S.reminders.some(function(r){return r.id===id;})){
+    patchReminder(id, {items:list}, {items:list});
+  }
+}
+function addItem(){
+  var name = S.newItem.trim(), L = listInfo();
+  if (!name){ toast("พิมพ์ชื่อสิ่งของที่อยากเพิ่ม"); return; }
+  if (hasProfanity(name)){ toast("กรุณาใช้คำที่สุภาพ"); return; }
+  if (L.items.some(function(x){ return x.toLowerCase()===name.toLowerCase(); })){ toast("มีของชิ้นนี้ในรายการแล้ว"); return; }
+  if (L.own) setOwnItems(L.items.concat([name]));
+  else { var c = Object.assign({}, S.customItems); c[S.current.name] = L.custom.concat([name]); S.customItems = c; LS.set("customItems", c); }
+  S.newItem = ""; focusId = "newItem"; syncProgress(); render();
+}
+function removeItem(i){
+  var L = listInfo();
+  if (L.own) setOwnItems(L.items.filter(function(_,idx){return idx!==i;}));
+  else if (i < L.base.length){
+    var r = Object.assign({}, S.removedItems); r[S.current.name] = L.removed.concat([L.base[i]]); S.removedItems = r; LS.set("removedItems", r);
+  } else {
+    var j = i - L.base.length, c = Object.assign({}, S.customItems);
+    c[S.current.name] = L.custom.filter(function(_,idx){return idx!==j;}); S.customItems = c; LS.set("customItems", c);
+  }
+  if (L.items.length === 1) toast("ต้องมีรายการเช็คอย่างน้อย 1 รายการ");
+  var next = {};
+  Object.keys(S.checked).forEach(function(k){ var n = Number(k); if (n<i) next[n]=S.checked[k]; else if (n>i) next[n-1]=S.checked[k]; });
+  S.checked = next; syncProgress(); render();
+}
+function restoreDefaults(){ var r = Object.assign({}, S.removedItems); r[S.current.name] = []; S.removedItems = r; LS.set("removedItems", r); S.checked = restoreChecked(S.current); render(); }
+
+function completeReminder(id){
+  var r = S.reminders.find(function(x){return x.id===id;});
+  if (!r) return;
+  if (r.once) removeReminder(id);
+  else patchReminder(id, {done_on:todayKey()}, {doneOn:todayKey()});
+  S.doneDay = todayKey(); LS.set("doneDay", S.doneDay);
+}
+function confirmChecked(){
+  var L = listInfo();
+  if (!L.items.length){ toast("ต้องมีรายการเช็คอย่างน้อย 1 รายการ"); return; }
+  var missed = L.items.filter(function(_,i){ return !S.checked[i]; });
+  if (!missed.length){
+    toast("พร้อมครบทุกอย่างแล้ว เยี่ยมมาก!");
+    if (S.current.reminderId) completeReminder(S.current.reminderId);
+  } else {
+    var next = Object.assign({}, S.stats);
+    missed.forEach(function(n){ var k = S.current.name+"||"+n; next[k] = (next[k]||0)+1; });
+    S.stats = next; LS.set("forgotStats", next);
+    toast("บันทึกแล้ว ยังไม่ได้เตรียม "+missed.length+" อย่าง");
+  }
+  var np = Object.assign({}, S.progress); delete np[progressKey(S.current)]; S.progress = np; LS.set("checkProgress", np);
+  S.checked = {}; go("home");
+}
+
+function setQuickTime(mins){ var d = new Date(Date.now()+mins*60000); S.hour = pad2(d.getHours()); S.minute = pad2(d.getMinutes()); render(); }
+function startEdit(id){
+  var r = S.reminders.find(function(x){return x.id===id;}); if (!r) return;
+  var p = r.time.split(":"); S.hour = p[0]; S.minute = p[1];
+  S.repeat = !r.once; S.days = (r.once || !r.days.length) ? ALL_DAYS.slice() : r.days.slice();
+  S.note = r.note || ""; S.titleDraft = r.title || "";
+  S.editItems = (r.items && r.items.length) ? r.items.slice() : (DATA[r.label] || GENERIC_ITEMS).slice();
+  S.newEditItem = ""; S.editingId = id; go("reminder");
+}
+function cancelEdit(){ S.editingId=null; S.note=""; S.titleDraft=""; S.editItems=[]; S.newEditItem=""; S.repeat=false; S.days=ALL_DAYS.slice(); render(); }
+function addEditItem(){
+  var name = S.newEditItem.trim();
+  if (!name){ toast("พิมพ์ชื่อสิ่งของที่อยากเพิ่ม"); return; }
+  if (hasProfanity(name)){ toast("กรุณาใช้คำที่สุภาพ"); return; }
+  if (S.editItems.some(function(x){return x.toLowerCase()===name.toLowerCase();})){ toast("มีของชิ้นนี้ในรายการแล้ว"); return; }
+  S.editItems = S.editItems.concat([name]); S.newEditItem = ""; focusId = "newEditItem"; render();
+}
+async function addReminder(){
+  var editing = S.editingId ? S.reminders.find(function(r){return r.id===S.editingId;}) : null;
+  var label = editing ? editing.label : S.current.name, icon = editing ? editing.icon : S.current.icon;
+  var list = editing ? S.editItems : listInfo().items;
+  if (!list.length){ toast("ต้องมีรายการเช็คอย่างน้อย 1 รายการก่อนตั้ง Reminder"); return; }
+  var h = parseInt(S.hour,10), m = parseInt(S.minute,10);
+  if (isNaN(h)||isNaN(m)||h<0||h>23||m<0||m>59){ toast("กรุณาใส่เวลาให้ถูกต้อง"); return; }
+  if (S.repeat && !S.days.length){ toast("เลือกวันที่ต้องการให้แจ้งเตือนอย่างน้อย 1 วัน"); return; }
+  var note = S.note.trim(), title = S.titleDraft.trim();
+  if ((note && hasProfanity(note)) || (title && hasProfanity(title))){ toast("กรุณาใช้คำที่สุภาพ"); return; }
+  var t = pad2(h)+":"+pad2(m), once = !S.repeat, days = once ? [] : S.days.slice();
+  var fire = nextFireDate(t, once ? ALL_DAYS : days);
+  var row = { time:t, once:once, days:days, note:note, title:title, label:label, icon:icon, items:list.slice(),
+    tz:(Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Bangkok"), next_fire_at: fire ? fire.toISOString() : null, sent_at:null, done_on:null };
+  var res = editing ? await sb.from("reminders").update(row).eq("id", editing.id) : await sb.from("reminders").insert(row);
+  if (res.error){ toast("บันทึกไม่สำเร็จ: "+res.error.message); return; }
+  await loadReminders();
+  S.editingId=null; S.note=""; S.titleDraft=""; S.editItems=[]; S.newEditItem="";
+  toast((editing ? "บันทึกการแก้ไขแล้ว" : "เพิ่มแจ้งเตือนเวลา "+t+" แล้ว") + (S.pushOn ? "" : " (ยังไม่ได้เปิดการแจ้งเตือน ไปเปิดที่ตั้งค่า)")); render();
+}
+function deleteReminder(id){
+  removeReminder(id);
+  toast("ลบการแจ้งเตือนแล้ว"); if (S.editingId===id) cancelEdit(); else render();
+}
+function openChecklistFrom(src, reminderId){
+  var live = reminderId ? S.reminders.find(function(r){return r.id===reminderId;}) : null; var d = live || src;
+  S.current = { name:d.label, icon:d.icon, title:d.title||"", items:(d.items&&d.items.length)?d.items:(DATA[d.label]||GENERIC_ITEMS), reminderId:reminderId };
+  S.checked = restoreChecked(S.current); S.detailId = null; go("check");
+}
+function saveProfile(next){ S.profile = next; LS.set("profile", next); }
+function saveName(){
+  var name = S.nameDraft.trim();
+  if (!name){ toast("กรุณาใส่ชื่อ"); return; }
+  if (hasProfanity(name)){ toast("กรุณาใช้คำที่สุภาพ"); return; }
+  saveProfile(Object.assign({}, S.profile, {name:name})); toast("บันทึกชื่อแล้ว"); render();
+}
+function setTheme(v){ S.themePref = v; LS.set("themePref", v); applyTheme(); render(); }
+
+/* ---------- OneSignal Web Push ---------- */
+var OS = null;
+function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1); }
+function isStandalone(){ return window.navigator.standalone===true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches); }
+function syncPush(){
+  try { S.pushOn = !!(OS && OS.Notifications.permission && OS.User.PushSubscription.optedIn); } catch(e){ S.pushOn = false; }
+  S.notifGranted = S.pushOn;
+}
+function loginPush(){ if (OS && S.user){ try { OS.login(S.user.id); } catch(e){} } }
+function initPush(){
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(async function(OneSignal){
+    try {
+      await OneSignal.init({ appId: CFG.ONESIGNAL_APP_ID, allowLocalhostAsSecureOrigin: true });
+      OS = OneSignal;
+      OneSignal.Notifications.addEventListener("click", function(ev){
+        var d = (ev.notification && ev.notification.additionalData) || {};
+        if (d.reminderId) openFromPush(d.reminderId);
+      });
+      loginPush(); syncPush(); render();
+    } catch(e){ console.warn("OneSignal init failed", e); }
+  });
+}
+function pushHint(){
+  if (!("Notification" in window)) return "เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน";
+  if (isIOS() && !isStandalone()) return "บน iPhone ต้องเพิ่มลงหน้าจอหลักแล้วเปิดจากไอคอนก่อน";
+  if (Notification.permission==="denied") return "ถูกบล็อกไว้ ไปเปิดอนุญาตในตั้งค่าของเบราว์เซอร์สำหรับเว็บนี้";
+  return S.pushOn ? "เปิดอยู่ จะเตือนแม้ปิดหน้าเว็บนี้" : "ปิดอยู่";
+}
+async function enablePush(){
+  if (!OS){ toast("ระบบแจ้งเตือนยังไม่พร้อม ลองใหม่อีกครั้ง"); return; }
+  if (isIOS() && !isStandalone()){ toast("บน iPhone ต้องเพิ่มลงหน้าจอหลักก่อน"); return; }
+  try {
+    await OS.Notifications.requestPermission();
+    if (OS.Notifications.permission) await OS.User.PushSubscription.optIn();
+  } catch(e){ console.warn(e); }
+  loginPush(); syncPush();
+  toast(S.pushOn ? "เปิดการแจ้งเตือนแล้ว" : "ยังไม่ได้รับอนุญาต เปิดได้ที่ตั้งค่าของเบราว์เซอร์");
+  render();
+}
+async function disablePush(){
+  try { if (OS) await OS.User.PushSubscription.optOut(); } catch(e){}
+  syncPush(); toast("ปิดการแจ้งเตือนแล้ว"); render();
+}
+function togglePush(){ if (S.pushOn) disablePush(); else enablePush(); }
+function openFromPush(id){
+  var r = S.reminders.find(function(x){return x.id===id;});
+  if (r) openChecklistFrom(r, id); else toast("ไม่พบรายการนี้แล้ว");
+}
+function finishOnboarding(){
+  var t = pad2(S.obHour)+":"+pad2(S.obMinute);
+  S.hour = pad2(S.obHour); S.minute = pad2(S.obMinute);
+  LS.set("defaultTime", t); LS.set("onboarded", true); S.onboarded = true; render({top:true});
+}
+
+/* ---------- ลบแอปและข้อมูลทั้งหมด ---------- */
+async function deleteEverything(){
+  var wasOn = S.pushOn;
+  S.deleting = true; render();
+  try {
+    if (OS){ try { await OS.User.PushSubscription.optOut(); } catch(e){} }
+    var res = await sb.functions.invoke("delete-account", { method:"POST" });
+    if (res.error) throw res.error;
+    if (OS){ try { await OS.logout(); } catch(e){} }
+    try { await sb.auth.signOut({ scope:"local" }); } catch(e){}
+    try {
+      Object.keys(localStorage).forEach(function(k){ if (k.indexOf("sr:")===0 || k.indexOf("sb-")===0) localStorage.removeItem(k); });
+      sessionStorage.clear();
+    } catch(e){}
+    mem = {};
+    S.confirmDelete = false;
+    toast("ลบแอปและข้อมูลทั้งหมดแล้ว");
+    setTimeout(function(){ location.replace(location.pathname); }, 1200);
+  } catch(e){
+    if (wasOn && OS){ try { await OS.User.PushSubscription.optIn(); } catch(_){} }
+    S.deleting = false;
+    toast("ลบข้อมูลไม่สำเร็จ ลองใหม่อีกครั้ง"); render();
+  }
+}
+
+/* ---------- view pieces ---------- */
+function avatarHtml(a, size){
+  return '<span class="avatar" style="width:'+size+'px;height:'+size+'px;background:'+a.bg+';color:'+a.fg+'">'+ic(a.icon, Math.round(size*.5))+'</span>';
+}
+function heading(icon, text){ return '<div class="h-row">'+ic(icon,20)+'<h2>'+text+'</h2></div>'; }
+function wheel(kind, count, val){
+  var h = '<div class="wheel" data-k="'+kind+'" data-v="'+val+'" role="listbox" aria-label="'+(kind.indexOf("ou")>=0||kind==="h"?"ชั่วโมง":"นาที")+'">';
+  for (var n=0;n<count;n++) h += '<div'+(n===val?' class="on"':'')+'>'+pad2(n)+'</div>';
+  return h+'</div>';
+}
+function timePicker(kh, km, hour, minute){
+  return '<div class="wheel-wrap"><div class="wheel-hl"></div>'+wheel(kh,24,hour)+'<span class="colon">:</span>'+wheel(km,60,minute)+'</div>';
+}
+function reminderRow(r, act){
+  var nx = formatRemaining(reminderNext(r));
+  return '<div class="rem'+(S.editingId===r.id?' on':'')+'">'+
+    '<button class="rem-main" data-act="'+act+'" data-id="'+esc(r.id)+'"><span class="rem-time">'+esc(r.time)+'</span><span class="rem-body">'+
+      '<span class="rem-title">'+ic(r.icon,16)+'<span>'+esc(r.title||r.label)+' · '+(r.once?'ครั้งเดียว':daysLabel(r.days))+(r.doneOn===todayKey()?' ✓ เสร็จวันนี้':'')+'</span></span>'+
+      (r.title?'<span class="note" style="display:block">ประเภท: '+esc(r.label)+'</span>':'')+
+      (nx?'<span class="note" style="display:block">'+nx+'</span>':'')+(r.sentAt?'<span class="note" style="display:block">ส่งแจ้งเตือนแล้ว</span>':'')+
+      (r.note?'<span class="note" style="display:block">โน้ต: '+esc(r.note)+'</span>':'')+
+    '</span></button>'+
+    '<button class="icon-btn" data-act="startEdit" data-id="'+esc(r.id)+'" aria-label="แก้ไข" style="color:var(--primary)">'+ic("edit",20)+'</button>'+
+    '<button class="icon-btn" data-act="delReminder" data-id="'+esc(r.id)+'" aria-label="ลบ" style="color:var(--danger)">'+ic("trash",20)+'</button></div>';
+}
+function sortedReminders(){
+  return S.reminders.slice().sort(function(a,b){ var da=reminderNext(a), db=reminderNext(b); return (da?da.getTime():Infinity)-(db?db.getTime():Infinity); });
+}
+
+/* ---------- screens ---------- */
+function viewHome(){
+  var g = greet(), now = new Date(), L = listInfo();
+  var sorted = sortedReminders();
+  var noneYet = S.reminders.length===0 && S.doneDay!==todayKey();
+  var home = sorted.filter(function(r){ return r.doneOn!==todayKey(); });
+  var todayCount = home.filter(function(r){ var d=reminderNext(r); return d && d.toDateString()===now.toDateString(); }).length;
+  var doneCount = L.items.filter(function(_,i){return S.checked[i];}).length;
+  var art = noneYet ? "bell" : todayCount>0 ? "checksq" : "coffee";
+  var sub = noneYet ? "ยังไม่มีเรื่องที่ต้องทำเลย ลองตั้งการแจ้งเตือนไว้ จะได้ไม่ลืมของสำคัญนะ" : todayCount>0 ? "วันนี้มี "+todayCount+" เรื่องที่ต้องทำ" : "วันนี้ไม่มีเรื่องต้องทำแล้ว พักผ่อนได้";
+  var h = '<div class="top-row"><div class="hero'+(noneYet?' tall':'')+'"><div class="greet">'+g.text+'<span style="color:'+g.color+'">'+ic(g.icon,20)+'</span></div><p>'+sub+'</p><div class="art">'+ic(art,92,1.2)+'</div></div>'+
+    '<div class="sum"><h3>ภาพรวมวันนี้</h3><div class="sub">'+esc(S.current.title||S.current.name)+'</div>'+
+    '<div class="sum-row"><i style="background:#b9c8bc"></i><span>ทั้งหมด</span><b>'+L.items.length+'</b></div>'+
+    '<div class="sum-row"><i style="background:var(--primary)"></i><span>เสร็จแล้ว</span><b>'+doneCount+'</b></div>'+
+    '<div class="sum-row"><i style="background:var(--danger)"></i><span>คงเหลือ</span><b>'+(L.items.length-doneCount)+'</b></div></div></div>';
+
+  h += '<section class="card"><h2>วันนี้จะทำอะไร?</h2><div class="tiles">'+ACTIVITIES.map(function(a,i){
+    return '<button class="tile" data-act="activity" data-i="'+i+'"><span class="ti" style="background:'+a.bg+';color:'+a.fg+'">'+ic(a.icon,28)+'</span><span>'+a.name+'</span></button>';
+  }).join("")+'</div></section>';
+
+  h += '<section class="card">'+heading("clock","การแจ้งเตือน");
+  if (sorted.length){
+    if (!home.length) h += '<p class="note">ทำครบทุกการแจ้งเตือนของวันนี้แล้ว</p>';
+    h += (S.showAll ? home : home.slice(0,3)).map(function(r){ return reminderRow(r,"detail"); }).join("");
+    if (home.length>3) h += '<button class="more" data-act="more">'+(S.showAll?'แสดงน้อยลง':'แสดงรายการเพิ่มเติม (อีก '+(home.length-3)+')')+ic(S.showAll?"up":"down",16)+'</button>';
+    h += '<button class="btn secondary" data-act="nav" data-s="reminder">'+ic("plus",18)+'เพิ่มการแจ้งเตือน</button>';
+  } else {
+    h += '<p class="note">ยังไม่ได้ตั้งการแจ้งเตือน ตั้งไว้เพื่อให้แอปเตือนก่อนออกจากบ้าน</p><button class="btn primary" data-act="nav" data-s="reminder">'+ic("bell",18)+'ตั้ง Reminder</button>';
+  }
+  h += '</section>';
+
+  var chips = ACTIVITIES.concat(EXTRA).map(function(a){ return '<button class="chip" data-act="chip" data-n="'+esc(a.name)+'">'+ic(a.icon,14)+esc(a.name)+'</button>'; }).join("");
+  h += '<section class="card"><span class="badge">'+ic("zap",14)+'Smart Suggestion</span><h2>วันนี้ทำอะไร? ให้ช่วยคิดของที่ต้องเตรียม</h2>'+
+    '<div class="inrow"><input class="input" id="query" data-bind="query" data-enter="suggest" value="'+esc(S.query)+'" placeholder="เช่น ไปทะเล, ประชุม, วิ่งตอนเย็น" enterkeyhint="search"><button class="go" data-act="suggest">แนะนำ</button></div>'+
+    '<div class="chips">'+chips+'</div>';
+  if (S.suggestion){
+    var s = S.suggestion;
+    h += '<div class="result"><h3>'+ic(s.icon,20)+'<span>ของที่ต้องเตรียมสำหรับ "'+esc(s.name)+'"</span></h3>'+
+      (!s.matched?'<p class="note">ยังไม่รู้จักกิจกรรมนี้ เลยแนะนำของที่ควรพกทุกครั้งให้ก่อนนะ</p>':'')+
+      '<ul>'+s.items.map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul><button class="btn primary" data-act="openSuggest">เปิด Checklist</button></div>';
+  }
+  h += '</section>';
+
+  var top = Object.entries(S.stats).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+  h += '<section class="card">'+heading("chart","สิ่งที่มักลืม");
+  if (!top.length) h += '<p class="note">ยังไม่มีสถิติ ลองเปิด Checklist แล้วกด "เช็คเสร็จแล้ว" ระบบจะนับของที่ยังไม่ได้ติ๊ก</p>';
+  else {
+    h += top.map(function(e,idx){ var k=e[0], c=e[1], parts = k.indexOf("||")>=0 ? k.split("||") : [null,k];
+      return '<div class="stat-line">'+(idx+1)+'. <b>'+esc(parts[1])+'</b>'+(parts[0]?' (ตอนไป'+esc(parts[0])+')':'')+' — '+c+' ครั้ง</div>'; }).join("");
+    h += '<button class="link" data-act="resetStats">รีเซ็ตสถิติ</button>';
+  }
+  return h+'</section>';
+}
+
+function ring(percent){
+  var r=34, c=2*Math.PI*r, off=c*(1-percent/100);
+  return '<svg class="ring" width="84" height="84" viewBox="0 0 84 84" role="img" aria-label="ความพร้อม '+percent+' เปอร์เซ็นต์"><circle cx="42" cy="42" r="'+r+'" fill="none" stroke="var(--switch-off)" stroke-width="8"/>'+
+    '<circle cx="42" cy="42" r="'+r+'" fill="none" stroke="var(--primary)" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 42 42)"/>'+
+    '<text x="42" y="48" text-anchor="middle" font-size="19" font-weight="700" fill="var(--text)" font-family="Prompt,sans-serif">'+percent+'%</text></svg>';
+}
+function viewCheck(){
+  var L = listInfo(), items = L.items;
+  var done = items.filter(function(_,i){return S.checked[i];}).length, remaining = items.length-done;
+  var percent = items.length ? Math.round(done/items.length*100) : 0;
+  var cur = S.current;
+  var h = '<section class="card"><span class="badge">'+ic(cur.icon,14)+'Smart Suggestion: '+esc(cur.name)+'</span>'+
+    '<div class="title-row"><span style="color:var(--primary)">'+ic(iconOf(cur.name)==="list"?cur.icon:iconOf(cur.name),22)+'</span><h2>'+esc(cur.title||cur.name)+' Checklist</h2><span class="pill">'+done+' / '+items.length+'</span></div>'+
+    '<div class="progress" role="progressbar" aria-valuenow="'+percent+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+percent+'%"></i></div>';
+  items.forEach(function(x,i){
+    h += '<div class="item'+(S.checked[i]?' done':'')+'"><button class="cb'+(S.checked[i]?' on':'')+'" data-act="toggle" data-i="'+i+'" role="checkbox" aria-checked="'+!!S.checked[i]+'" aria-label="'+esc(x)+'">'+(S.checked[i]?ic("check",16,3):'')+'</button>'+
+      '<button class="t" data-act="toggle" data-i="'+i+'" style="text-align:left">'+esc(x)+'</button><button class="rm" data-act="remove" data-i="'+i+'" aria-label="ลบ '+esc(x)+'">'+ic("x",18)+'</button></div>';
+  });
+  if (!items.length) h += '<div class="warn">ต้องมีรายการเช็คอย่างน้อย 1 รายการ (เพิ่มของเองด้านล่าง หรือคืนรายการที่ระบบแนะนำ)</div>';
+  if (L.removed.length) h += '<button class="link" data-act="restoreDefaults">คืนรายการที่ระบบแนะนำ ('+L.removed.length+')</button>';
+  h += '<div class="inrow"><input class="input" id="newItem" data-bind="newItem" data-enter="addItem" value="'+esc(S.newItem)+'" placeholder="เพิ่มของเอง เช่น ร่ม, ยา" enterkeyhint="done"><button class="go" data-act="addItem">+ เพิ่ม</button></div>'+
+    '<div class="stats"><div style="flex:1.4">'+ring(percent)+'<small>ความพร้อม</small></div><span class="div"></span><div><b>'+done+'</b><small>เสร็จแล้ว</small></div><span class="div"></span><div><b>'+remaining+'</b><small>คงเหลือ</small></div></div>'+
+    '<button class="btn primary" data-act="confirm">เช็คเสร็จแล้ว</button>'+
+    '<button class="btn secondary" data-act="nav" data-s="reminder">'+ic("bell",18)+'ตั้ง Reminder</button>'+
+    '<button class="btn secondary" data-act="nav" data-s="home">'+ic("back",18)+'กลับหน้าหลัก</button></section>';
+  return h;
+}
+
+function viewReminder(){
+  var editingR = S.editingId ? S.reminders.find(function(r){return r.id===S.editingId;}) : null;
+  var tIcon = editingR ? editingR.icon : S.current.icon, tLabel = editingR ? editingR.label : S.current.name;
+  var h = '<section class="card">'+heading("bell", S.editingId ? "แก้ไข Reminder" : "ตั้ง Reminder")+
+    '<p class="p">เลื่อนเพื่อเลือกเวลาที่ต้องการให้ตรวจสอบของ</p>'+
+    '<div class="label">ชื่อรายการ (ไม่บังคับ)</div><input class="input" id="titleDraft" data-bind="titleDraft" maxlength="30" value="'+esc(S.titleDraft)+'" placeholder="เช่น ไปทะเลกับเพื่อน (ไม่ตั้ง = ใช้ &quot;'+esc(tLabel)+'&quot;)">'+
+    '<p class="note" style="margin-top:6px;display:flex;align-items:center;gap:6px">ประเภท: '+ic(tIcon,14)+esc(tLabel)+'</p>'+
+    timePicker("h","m",parseInt(S.hour,10)||0,parseInt(S.minute,10)||0)+
+    '<div class="quick">'+[["อีก 10 นาที",10],["อีก 30 นาที",30],["อีก 1 ชั่วโมง",60]].map(function(q){ return '<button data-act="quick" data-m="'+q[1]+'">'+q[0]+'</button>'; }).join("")+'</div>'+
+    '<div class="switch-row"><span class="label" style="margin:0" id="repeatLbl">ทำซ้ำ</span><button class="switch" role="switch" aria-checked="'+S.repeat+'" aria-labelledby="repeatLbl" data-act="toggleRepeat"></button></div>'+
+    '<p class="note" style="margin-top:6px">'+(S.repeat?'แจ้งเตือนตามวันที่เลือก และเก็บไว้ในรายการจนกว่าจะลบ':'แจ้งเตือนครั้งเดียว เมื่อแจ้งเตือนแล้วรายการจะหายไปเอง')+'</p>';
+  if (S.repeat) h += '<div class="days">'+DAYS.map(function(d){ var on = S.days.indexOf(d.wd)>=0; return '<button class="day'+(on?' on':'')+'" data-act="day" data-wd="'+d.wd+'" aria-pressed="'+on+'">'+d.label+'</button>'; }).join("")+'</div>';
+  h += '<div class="label">เพิ่มโน้ต (ไม่บังคับ)</div><input class="input" id="note" data-bind="note" maxlength="80" value="'+esc(S.note)+'" placeholder="เช่น ตรวจสอบของก่อนออกเดินทาง">';
+  if (S.editingId){
+    h += '<div class="label">ของที่ต้องเตรียม ('+S.editItems.length+')</div>'+S.editItems.map(function(x,i){ return '<div class="edit-item"><span>'+esc(x)+'</span><button class="rm" data-act="removeEditItem" data-i="'+i+'" aria-label="ลบ '+esc(x)+'">'+ic("x",18)+'</button></div>'; }).join("");
+    if (!S.editItems.length) h += '<p class="note">ต้องมีของอย่างน้อย 1 รายการ</p>';
+    h += '<div class="inrow"><input class="input" id="newEditItem" data-bind="newEditItem" data-enter="addEditItem" value="'+esc(S.newEditItem)+'" placeholder="เพิ่มของ เช่น ร่ม, ยา"><button class="go" data-act="addEditItem">+ เพิ่ม</button></div>';
+  }
+  h += '<button class="btn primary" style="margin-top:16px" data-act="addReminder">'+(S.editingId?'บันทึกการแก้ไข':'+ เพิ่มการแจ้งเตือน')+'</button>';
+  if (S.editingId) h += '<button class="btn secondary" data-act="cancelEdit">ยกเลิกการแก้ไข</button>';
+  h += '<p class="note" style="margin-top:12px;display:flex;gap:6px">'+ic("info",16)+'<span>เซิร์ฟเวอร์ส่งแจ้งเตือนให้ แม้ปิดหน้าเว็บนี้ ต้องเปิดการแจ้งเตือนไว้ที่ตั้งค่า (iPhone: เปิดจากไอคอนบนหน้าจอหลัก)</span></p></section>';
+  h += '<section class="card">'+heading("list","การแจ้งเตือนที่ตั้งไว้ ("+S.reminders.length+")");
+  var sorted = sortedReminders();
+  h += sorted.length ? sorted.map(function(r){ return reminderRow(r,"startEdit"); }).join("") : '<p class="note">ยังไม่มีรายการ เพิ่มการแจ้งเตือนด้านบนได้เลย</p>';
+  return h+'</section>';
+}
+
+function viewSettings(){
+  return '<section class="card">'+heading("settings","ตั้งค่า")+
+    '<div class="label">เปลี่ยนโปรไฟล์</div><div class="avatars">'+AVATARS.map(function(a,i){ return '<button class="'+(S.profile.avatar===i?'on':'')+'" data-act="avatar" data-i="'+i+'" aria-label="โปรไฟล์ '+(i+1)+'">'+avatarHtml(a,46)+'</button>'; }).join("")+'</div>'+
+    '<div class="label">เปลี่ยนชื่อ</div><div class="inrow"><input class="input" id="nameDraft" data-bind="nameDraft" data-enter="saveName" maxlength="20" value="'+esc(S.nameDraft)+'" placeholder="ชื่อของคุณ"><button class="go" data-act="saveName">บันทึก</button></div>'+
+    '<div class="label">โทนแอป</div>'+themeSeg()+
+    '<div class="label">การแจ้งเตือน</div><div class="switch-row"><span id="pushLbl">รับแจ้งเตือนเมื่อถึงเวลา</span><button class="switch" role="switch" aria-checked="'+S.pushOn+'" aria-labelledby="pushLbl" data-act="togglePush"></button></div><p class="note" style="margin-top:6px">'+pushHint()+'</p>'+
+    '<div class="label">ข้อมูลของฉัน</div><p class="note">ไม่ต้องสมัครสมาชิก ข้อมูลผูกกับเบราว์เซอร์นี้ ลบทั้งหมดได้ด้วยปุ่มด้านล่าง</p><button class="btn danger" data-act="askDelete">'+ic("trash",18)+'ลบแอปและข้อมูลทั้งหมด</button>'+
+    '<button class="btn secondary" style="margin-top:18px" data-act="nav" data-s="home">'+ic("back",18)+'กลับหน้าหลัก</button></section>';
+}
+function themeSeg(){
+  return '<div class="seg">'+[["system","ตามระบบ","monitorsys"],["light","สว่าง","sun"],["dark","มืด","moon"]].map(function(t){
+    return '<button class="'+(S.themePref===t[0]?'on':'')+'" data-act="theme" data-v="'+t[0]+'" aria-pressed="'+(S.themePref===t[0])+'">'+ic(t[2],16)+t[1]+'</button>'; }).join("")+'</div>';
+}
+
+function viewOnboarding(){
+  var dots = '<div class="dots">'+[0,1,2].map(function(i){return '<i'+(S.obStep===i?' class="on"':'')+'></i>';}).join("")+'</div>';
+  var back = function(to){ return '<button class="btn secondary" data-act="obGo" data-to="'+to+'">'+ic("back",18)+'ย้อนกลับ</button>'; };
+  if (S.obStep===0){
+    return '<section class="card ob"><div class="ob-hero"><i></i><i></i><span class="core">'+ic("bell",46)+'</span></div><h2>ยินดีต้อนรับสู่ Smart Reminder</h2>'+
+      '<p class="p">ผู้ช่วยเตรียมตัวที่จะช่วยให้คุณไม่ลืมของสำคัญก่อนออกจากบ้านในทุกวัน</p>'+
+      '<div class="feat">'+[["checksq","เช็คของ"],["clock","เตือนตรงเวลา"],["chart","ดูสถิติ"]].map(function(f){return '<span class="chip" style="color:var(--text)">'+ic(f[0],16)+f[1]+'</span>';}).join("")+'</div>'+
+      dots+'<button class="btn primary" data-act="obGo" data-to="1">เริ่มเลย</button></section>';
+  }
+  if (S.obStep===1){
+    var steps = [["list","#e3f1e2","#2f6b3f","เลือกกิจกรรมของวัน หรือพิมพ์เองแล้วให้ระบบแนะนำของที่ต้องเตรียม"],["checksq","#e1edf9","#2f6fb0","ติ๊กของใน Checklist เพิ่มหรือลบรายการได้ตามต้องการ"],["clock","#fdebd8","#b8681a","ตั้ง Reminder ได้หลายรายการ แอปจะแจ้งเตือนตามวันและเวลาที่เลือก"],["chart","#efe6f8","#7c4dbb","ดูสถิติ \"สิ่งที่มักลืม\" ในหน้าหลัก"]];
+    return '<section class="card ob"><h2 style="display:flex;justify-content:center;align-items:center;gap:8px">'+ic("zap",22)+'แอปนี้ทำงานยังไง?</h2>'+
+      steps.map(function(s,i){ return '<div class="step"><span class="si" style="background:'+s[1]+';color:'+s[2]+'">'+ic(s[0],20)+'<b>'+(i+1)+'</b></span><span>'+s[3]+'</span></div>'; }).join("")+
+      '<div class="perm"><div style="display:flex;align-items:center;gap:8px;font-weight:700;color:var(--primary);margin-bottom:4px">'+ic("bell",18)+'ขออนุญาตแจ้งเตือน</div><p class="p">เซิร์ฟเวอร์จะส่งแจ้งเตือนตามเวลาที่ตั้งไว้ แม้คุณปิดหน้านี้ไปแล้ว</p>'+
+      '<button class="btn primary" data-act="obPerm"'+(S.notifGranted?' disabled':'')+'>'+ic(S.notifGranted?"check":"bell",18)+(S.notifGranted?'อนุญาตแล้ว':'อนุญาตการแจ้งเตือน')+'</button></div>'+
+      dots+'<button class="btn primary" data-act="obGo" data-to="2">ถัดไป</button>'+back(0)+'</section>';
+  }
+  return '<section class="card ob"><div class="ob-hero" style="width:90px;height:90px"><span class="core" style="width:64px;height:64px">'+ic("home",30)+'</span></div><h2>ปกติออกจากบ้านกี่โมง?</h2>'+
+    '<p class="p">เลือกเวลาที่คุณมักออกจากบ้าน เราจะใช้เป็นเวลาเริ่มต้นในหน้า Reminder</p>'+timePicker("oh","om",S.obHour,S.obMinute)+
+    '<p class="note" style="display:flex;gap:6px;justify-content:center;align-items:center">'+ic("info",16)+'เปลี่ยนเวลาเองได้ทุกเมื่อที่หน้า Reminder</p>'+dots+
+    '<button class="btn primary" data-act="obFinish">'+ic("check",18)+'เริ่มใช้งาน</button>'+back(1)+'</section>';
+}
+
+function viewModals(){
+  var h = "";
+  if (S.menuOpen){
+    h += '<div class="scrim menu" data-act="closeMenu"><div class="menu-card" data-stop="1"><div class="menu-head">'+avatarHtml(AVATARS[S.profile.avatar]||AVATARS[0],44)+'<div><b>'+esc(S.profile.name)+'</b><small>โปรไฟล์ของฉัน</small></div></div>'+
+      '<button class="menu-row" data-act="openSettings"><span style="color:var(--primary);display:flex">'+ic("settings",20)+'</span><span>ตั้งค่า</span>'+ic("right",18)+'</button>'+
+      '<div class="menu-row" style="padding-bottom:8px"><span style="flex:none;color:var(--primary);display:flex">'+ic("sun",20)+'</span><span>โทนแอป</span></div>'+themeSeg()+'</div></div>';
+  }
+  var d = S.detailId ? S.reminders.find(function(r){return r.id===S.detailId;}) : null;
+  if (d){
+    h += '<div class="scrim" data-act="closeDetail"><div class="modal" data-stop="1" role="dialog" aria-modal="true"><div class="modal-head"><h2>'+esc(d.title||d.label)+'</h2><button data-act="closeDetail" aria-label="ปิด" style="color:var(--muted)">'+ic("x",24)+'</button></div>'+
+      '<div class="det-row"><span>ประเภท</span><b>'+esc(d.label)+'</b></div><div class="det-row"><span>เวลา</span><b>'+esc(d.time)+' น.</b></div>'+
+      '<div class="det-row"><span>ความถี่</span><b>'+(d.once?'ครั้งเดียว':daysLabel(d.days))+'</b></div><div class="det-row"><span>ครั้งถัดไป</span><b>'+(formatRemaining(reminderNext(d))||"-")+'</b></div>'+
+      (d.note?'<div class="det-row"><span>โน้ต</span><b>'+esc(d.note)+'</b></div>':'')+
+      '<div class="label">ของที่ต้องเตรียม ('+(d.items||[]).length+')</div><ul class="det-list">'+(d.items||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul>'+
+      '<button class="btn primary" data-act="openList" data-id="'+esc(d.id)+'">เปิด Checklist</button><button class="btn secondary" data-act="closeDetail">ปิด</button></div></div>';
+  }
+  if (S.confirmDelete){
+    h += '<div class="scrim" style="z-index:50"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="delT" style="text-align:center"><div class="alert-ic" style="background:var(--danger)">'+ic("trash",30)+'</div>'+
+      '<h2 id="delT" style="font-size:19px">ลบแอปและข้อมูลทั้งหมด?</h2><p class="p" style="margin-top:6px;text-align:left">ระบบจะยกเลิกการแจ้งเตือน ลบรายการเตือนและของที่เตรียมไว้ทั้งหมด และลบบัญชีผู้ใช้นี้ออกจากเซิร์ฟเวอร์ ย้อนกลับไม่ได้ ถ้ากลับมาเปิดใหม่ จะเริ่มต้นด้วยข้อมูลว่าง</p>'+
+      '<button class="btn danger" data-act="doDelete"'+(S.deleting?' disabled':'')+'>'+(S.deleting?'กำลังลบ...':'ยืนยันลบทั้งหมด')+'</button><button class="btn secondary" data-act="cancelDelete"'+(S.deleting?' disabled':'')+'>ยกเลิก</button></div></div>';
+  }
+  return h;
+}
+
+function viewGate(){
+  var steps = [["แตะปุ่มแชร์ (สี่เหลี่ยมมีลูกศรชี้ขึ้น) ที่แถบล่างของ Safari"],["เลื่อนลงแล้วเลือก \"เพิ่มไปยังหน้าจอโฮม\""],["แตะ \"เพิ่ม\" แล้วเปิดแอปจากไอคอนที่เพิ่มบนหน้าจอ"]];
+  return '<main style="min-height:100vh;justify-content:center"><section class="card ob"><div class="ob-hero"><i></i><i></i><span class="core">'+ic("phone",46)+'</span></div>'+
+    '<h2>เพิ่มลงหน้าจอหลักก่อนใช้งาน</h2><p class="p">บน iPhone การแจ้งเตือนทำงานได้เมื่อเปิดจากไอคอนบนหน้าจอหลักเท่านั้น ให้ทำตามนี้ใน Safari</p>'+
+    steps.map(function(t,i){ return '<div class="step"><span class="si" style="background:var(--soft);color:var(--primary)">'+ic("plus",20)+'<b>'+(i+1)+'</b></span><span>'+t[0]+'</span></div>'; }).join("")+
+    '<p class="note" style="margin-top:10px">ถ้าใช้ต่อในเบราว์เซอร์ จะไม่มีแจ้งเตือน และข้อมูลที่สร้างตรงนี้จะไม่ตามไปที่ไอคอน</p>'+
+    '<button class="btn secondary" data-act="skipInstall">ใช้ต่อในเบราว์เซอร์ (ไม่มีแจ้งเตือน)</button></section></main>';
+}
+function viewBoot(){
+  return '<main style="min-height:100vh;justify-content:center"><section class="card ob"><div class="ob-hero" style="width:90px;height:90px"><span class="core" style="width:64px;height:64px">'+ic("bell",30)+'</span></div><h2>Smart Reminder</h2>'+
+    (S.bootError ? '<div class="warn">'+esc(S.bootError)+'</div><button class="btn primary" data-act="retryBoot">ลองใหม่</button>' : '<p class="p">กำลังเตรียมแอป...</p>')+'</section></main>';
+}
+function navBtn(id, icon, label){
+  var on = S.screen===id;
+  return '<button class="nav-btn'+(on?' on':'')+'" data-act="nav" data-s="'+id+'" aria-label="'+label+'"'+(on?' aria-current="page"':'')+'>'+ic(icon,26)+'</button>';
+}
+
+function render(opts){
+  opts = opts || {};
+  var app = document.getElementById("app"), y = window.scrollY, html;
+  if (S.gate){
+    html = viewGate();
+  } else if (S.booting){
+    html = viewBoot();
+  } else if (!S.onboarded){
+    html = '<main style="min-height:100vh;justify-content:center;padding-block:24px">'+viewOnboarding()+'</main>';
+  } else {
+    var body = S.screen==="home" ? viewHome() : S.screen==="check" ? viewCheck() : S.screen==="reminder" ? viewReminder() : viewSettings();
+    html = '<header class="header"><div class="header-in"><div class="brand"><h1><span style="color:var(--primary);display:flex">'+ic("phone",24)+'</span>Smart Reminder</h1><p>คิดก่อนลืม — ผู้ช่วยเตรียมตัวอัจฉริยะ</p></div>'+
+      '<button class="round" data-act="nav" data-s="reminder" aria-label="การแจ้งเตือน">'+ic("bell",22)+(S.reminders.length?'<span class="dot"></span>':'')+'</button>'+
+      '<button data-act="openMenu" aria-label="เมนูโปรไฟล์">'+avatarHtml(AVATARS[S.profile.avatar]||AVATARS[0],42)+'</button></div></header>'+
+      '<main class="shell">'+body+'</main>'+
+      '<nav class="nav-pill" aria-label="เมนูหลัก"><div class="nav-glass">'+navBtn("home","home","หน้าหลัก")+navBtn("check","checksq","Checklist")+navBtn("reminder","bell","Reminder")+'</div></nav>';
+  }
+  app.innerHTML = html + viewModals();
+  window.scrollTo(0, opts.top ? 0 : y);
+  initWheels();
+  if (focusId){ var el = document.getElementById(focusId); if (el){ el.focus(); } focusId = null; }
+}
+
+/* ---------- wheels ---------- */
+var ITEM = 48;
+function initWheels(){
+  document.querySelectorAll(".wheel").forEach(function(w){
+    var kind = w.dataset.k, val = +w.dataset.v, t;
+    w.scrollTop = val*ITEM;
+    w.addEventListener("scroll", function(){
+      clearTimeout(t);
+      t = setTimeout(function(){
+        var n = w.children.length, idx = Math.min(n-1, Math.max(0, Math.round(w.scrollTop/ITEM)));
+        Array.prototype.forEach.call(w.children, function(c,i){ c.classList.toggle("on", i===idx); });
+        if (kind==="h") S.hour = pad2(idx); else if (kind==="m") S.minute = pad2(idx);
+        else if (kind==="oh") S.obHour = idx; else if (kind==="om") S.obMinute = idx;
+      }, 90);
+    });
+  });
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", function(e){
+  var el = e.target.closest("[data-act]");
+  if (!el) return;
+  if (el.classList.contains("scrim") && e.target !== el) return;
+  var a = el.dataset.act, i = +el.dataset.i, id = el.dataset.id;
+  switch(a){
+    case "nav": S.screen = el.dataset.s; S.menuOpen = false; render({top:true}); break;
+    case "openMenu": S.menuOpen = true; render(); break;
+    case "closeMenu": S.menuOpen = false; render(); break;
+    case "openSettings": S.nameDraft = S.profile.name; go("settings"); break;
+    case "theme": setTheme(el.dataset.v); break;
+    case "activity": selectActivity(i); break;
+    case "toggle": toggleItem(i); break;
+    case "remove": removeItem(i); break;
+    case "addItem": addItem(); break;
+    case "restoreDefaults": restoreDefaults(); break;
+    case "confirm": confirmChecked(); break;
+    case "suggest": runSuggest(S.query); break;
+    case "chip": S.query = el.dataset.n; runSuggest(el.dataset.n); break;
+    case "openSuggest": openAsChecklist(); break;
+    case "resetStats": S.stats = {}; LS.set("forgotStats", {}); render(); break;
+    case "more": S.showAll = !S.showAll; render(); break;
+    case "detail": S.detailId = id; render(); break;
+    case "closeDetail": S.detailId = null; render(); break;
+    case "openList": openChecklistFrom(null, id); break;
+    case "startEdit": startEdit(id); break;
+    case "delReminder": deleteReminder(id); break;
+    case "quick": setQuickTime(+el.dataset.m); break;
+    case "toggleRepeat": S.repeat = !S.repeat; render(); break;
+    case "day": var wd = +el.dataset.wd; S.days = S.days.indexOf(wd)>=0 ? S.days.filter(function(x){return x!==wd;}) : S.days.concat([wd]); render(); break;
+    case "addReminder": addReminder(); break;
+    case "cancelEdit": cancelEdit(); break;
+    case "addEditItem": addEditItem(); break;
+    case "removeEditItem": S.editItems = S.editItems.filter(function(_,idx){return idx!==i;}); render(); break;
+    case "avatar": saveProfile(Object.assign({}, S.profile, {avatar:i})); render(); break;
+    case "saveName": saveName(); break;
+    case "obGo": S.obStep = +el.dataset.to; render({top:true}); break;
+    case "obPerm": enablePush(); break;
+    case "togglePush": togglePush(); break;
+    case "askDelete": S.confirmDelete = true; render(); break;
+    case "cancelDelete": if (!S.deleting){ S.confirmDelete = false; render(); } break;
+    case "doDelete": deleteEverything(); break;
+    case "skipInstall": LS.set("skipInstall", true); S.gate = false; boot(); break;
+    case "retryBoot": boot(); break;
+    case "obFinish": finishOnboarding(); break;
+  }
+});
+document.addEventListener("input", function(e){ var k = e.target.dataset && e.target.dataset.bind; if (k) S[k] = e.target.value; });
+document.addEventListener("keydown", function(e){
+  if (e.key==="Enter" && e.target.dataset && e.target.dataset.enter){
+    e.preventDefault();
+    var m = e.target.dataset.enter;
+    if (m==="suggest") runSuggest(S.query); else if (m==="addItem") addItem(); else if (m==="addEditItem") addEditItem(); else if (m==="saveName") saveName();
+  }
+});
+document.addEventListener("visibilitychange", function(){ if (!document.hidden && S.user && !S.booting){ loadReminders().then(function(){ syncPush(); render(); }); } });
+
+/* ---------- boot ---------- */
+async function boot(){
+  S.booting = true; S.bootError = ""; render();
+  if (!cfgOk()){ S.bootError = "ยังไม่ได้ตั้งค่า config.js (ใส่ SUPABASE_URL, SUPABASE_KEY และ ONESIGNAL_APP_ID)"; render(); return; }
+  if (!window.supabase){ S.bootError = "โหลดไลบรารีไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่"; render(); return; }
+  try {
+    if (!sb) sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:false } });
+    var cur = await sb.auth.getSession(), user = cur.data && cur.data.session ? cur.data.session.user : null;
+    if (!user){
+      var r = await sb.auth.signInAnonymously();
+      if (r.error) throw r.error;
+      user = r.data.user;
+    }
+    S.user = user;
+    loginPush();
+    await loadReminders();
+    S.booting = false; render();
+    var q = new URLSearchParams(location.search).get("r");
+    if (q){ history.replaceState(null, "", location.pathname); openFromPush(q); }
+  } catch(e){
+    S.bootError = "เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ: " + (e && e.message ? e.message : e);
+    render();
+  }
+}
+applyTheme();
+S.nameDraft = S.profile.name;
+S.gate = isIOS() && !isStandalone() && !LS.get("skipInstall", false);
+initPush();
+if (S.gate) render(); else boot();
+setInterval(function(){
+  if (S.user && S.onboarded && S.screen==="home" && !document.hidden && !S.menuOpen && !S.detailId && !S.confirmDelete && !/INPUT/.test((document.activeElement||{}).tagName||"")) render();
+}, 15000);
+})();
+</script>
+</body>
+</html>
