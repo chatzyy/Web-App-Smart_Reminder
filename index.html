@@ -89,6 +89,7 @@ main{padding-block:14px 130px;padding-left:max(16px,env(safe-area-inset-left,0px
 .sum-row span{flex:1}
 .sum-row b{font-size:15px;color:var(--text);font-variant-numeric:tabular-nums}
 
+
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .tile{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;font-weight:600;min-width:0}
 .tile .ti{width:58px;height:58px;border-radius:18px;display:grid;place-items:center}
@@ -374,7 +375,7 @@ function daysLabel(days){ return days.length===7 ? "ทุกวัน" : DAYS.f
 var S = {
   screen:"home",
   profile: LS.get("profile",{name:"ผู้ใช้",avatar:0}),
-  themePref: LS.get("themePref","system"),
+  themePref: LS.get("themePref","light"),
   reminders: [], user:null, booting:true, bootError:"", gate:false, pushOn:false, confirmDelete:false, deleting:false,
   customItems: LS.get("customItems",{}),
   removedItems: LS.get("removedItems",{}),
@@ -608,17 +609,12 @@ function initPush(){
       OneSignal.Notifications.addEventListener("click", function(ev){
         var d = (ev.notification && ev.notification.additionalData) || {};
         if (d.reminderId) openFromPush(d.reminderId);
+      });
       OneSignal.Notifications.addEventListener("foregroundWillDisplay", function(ev){
-          var d = (ev.notification && ev.notification.additionalData) || {};
-
-          if (d.reminderId) {
-            if (typeof ev.preventDefault === "function") {
-              ev.preventDefault();
-            }
-
-            openFromPush(d.reminderId);
-          }
-        }); 
+        var d = (ev.notification && ev.notification.additionalData) || {};
+        if (!d.reminderId) return;
+        if (typeof ev.preventDefault === "function") ev.preventDefault();
+        fireInApp(d.reminderId);
       });
       loginPush(); syncPush(); render();
     } catch(e){ console.warn("OneSignal init failed", e); }
@@ -648,26 +644,44 @@ async function disablePush(){
 }
 function togglePush(){ if (S.pushOn) disablePush(); else enablePush(); }
 function openFromPush(id){
-  var r = S.reminders.find(function(x){
-    return x.id === id;
-  });
+  var r = S.reminders.find(function(x){ return x.id === id; });
+  if (r){ S.menuOpen = false; S.detailId = null; openChecklistFrom(r, id); }
+  else toast("ไม่พบรายการนี้แล้ว");
+}
 
-  if (r) {
-    if (r.once) {
-      var stamp = Date.now();
-
-      S.reminders = S.reminders.map(function(x){
-        return x.id === id
-          ? Object.assign({}, x, {sentAt: stamp})
-          : x;
-      });
-    }
-
-    S.menuOpen = false;
-    openChecklistFrom(r, id);
+/* ---------- ถึงเวลาแล้วขณะเปิดแอป: เด้งไป Checklist ทันที ---------- */
+var firedKeys = {};
+function fireKey(r){ return r.once ? r.id : r.id + "@" + todayKey() + "@" + r.time; }
+function fireInApp(id){
+  var r = S.reminders.find(function(x){ return x.id === id; });
+  if (!r) return;
+  var key = fireKey(r);
+  if (firedKeys[key]) return;
+  firedKeys[key] = 1;
+  S.menuOpen = false; S.detailId = null; S.editingId = null; S.confirmDelete = false;
+  openChecklistFrom(r, id);
+  try { if (navigator.vibrate) navigator.vibrate([200,100,200]); } catch(e){}
+  if (r.once){
+    // ทำเครื่องหมายว่าส่งแล้ว: หายจากหน้าโฮม/Reminder และเซิร์ฟเวอร์จะไม่ส่งซ้ำ
+    patchReminder(id, { sent_at:new Date().toISOString(), next_fire_at:null }, { sentAt:Date.now(), fireAt:null });
   } else {
-    toast("ไม่พบรายการนี้แล้ว");
+    // ทำซ้ำ: ซ่อนจากหน้าโฮมของวันนี้ และเซิร์ฟเวอร์จะข้ามการส่งวันนี้ (พรุ่งนี้กลับมาตามเดิม)
+    patchReminder(id, { done_on:todayKey() }, { doneOn:todayKey() });
   }
+}
+function dueCheck(){
+  if (!S.user || S.booting || S.gate || !S.onboarded) return;
+  var now = Date.now();
+  S.reminders.forEach(function(r){
+    var at = null;
+    if (r.once){
+      if (!r.sentAt && r.fireAt && r.fireAt <= now && now - r.fireAt < 10*60e3) at = r.fireAt;
+    } else if (r.doneOn !== todayKey()){
+      var last = lastOccurrence(r, now);
+      if (last && now - last < 2*60e3) at = last;
+    }
+    if (at != null) fireInApp(r.id);
+  });
 }
 function finishOnboarding(){
   var t = pad2(S.obHour)+":"+pad2(S.obMinute);
@@ -725,15 +739,16 @@ function reminderRow(r, act){
     '<button class="icon-btn" data-act="startEdit" data-id="'+esc(r.id)+'" aria-label="แก้ไข" style="color:var(--primary)">'+ic("edit",20)+'</button>'+
     '<button class="icon-btn" data-act="delReminder" data-id="'+esc(r.id)+'" aria-label="ลบ" style="color:var(--danger)">'+ic("trash",20)+'</button></div>';
 }
+function activeReminders(){ return S.reminders.filter(function(r){ return !(r.once && r.sentAt); }); }
 function sortedReminders(){
-  return S.reminders.slice().sort(function(a,b){ var da=reminderNext(a), db=reminderNext(b); return (da?da.getTime():Infinity)-(db?db.getTime():Infinity); });
+  return activeReminders().sort(function(a,b){ var da=reminderNext(a), db=reminderNext(b); return (da?da.getTime():Infinity)-(db?db.getTime():Infinity); });
 }
 
 /* ---------- screens ---------- */
 function viewHome(){
   var g = greet(), now = new Date(), L = listInfo();
   var sorted = sortedReminders();
-  var noneYet = S.reminders.length===0 && S.doneDay!==todayKey();
+  var noneYet = sorted.length===0 && S.doneDay!==todayKey();
   var home = sorted.filter(function(r){
       return r.doneOn !== todayKey() &&
             !(r.once && r.sentAt);
@@ -835,7 +850,7 @@ function viewReminder(){
   h += '<button class="btn primary" style="margin-top:16px" data-act="addReminder">'+(S.editingId?'บันทึกการแก้ไข':'+ เพิ่มการแจ้งเตือน')+'</button>';
   if (S.editingId) h += '<button class="btn secondary" data-act="cancelEdit">ยกเลิกการแก้ไข</button>';
   h += '<p class="note" style="margin-top:12px;display:flex;gap:6px">'+ic("info",16)+'<span>เซิร์ฟเวอร์ส่งแจ้งเตือนให้ แม้ปิดหน้าเว็บนี้ ต้องเปิดการแจ้งเตือนไว้ที่ตั้งค่า (iPhone: เปิดจากไอคอนบนหน้าจอหลัก)</span></p></section>';
-  h += '<section class="card">'+heading("list","การแจ้งเตือนที่ตั้งไว้ ("+S.reminders.length+")");
+  h += '<section class="card">'+heading("list","การแจ้งเตือนที่ตั้งไว้ ("+activeReminders().length+")");
   var sorted = sortedReminders();
   h += sorted.length ? sorted.map(function(r){ return reminderRow(r,"startEdit"); }).join("") : '<p class="note">ยังไม่มีรายการ เพิ่มการแจ้งเตือนด้านบนได้เลย</p>';
   return h+'</section>';
@@ -938,7 +953,7 @@ function render(opts){
   } else {
     var body = S.screen==="home" ? viewHome() : S.screen==="check" ? viewCheck() : S.screen==="reminder" ? viewReminder() : viewSettings();
     html = '<header class="header"><div class="header-in"><div class="brand"><h1><span style="color:var(--primary);display:flex">'+ic("phone",24)+'</span>Smart Reminder</h1><p>คิดก่อนลืม — ผู้ช่วยเตรียมตัวอัจฉริยะ</p></div>'+
-      '<button class="round" data-act="nav" data-s="reminder" aria-label="การแจ้งเตือน">'+ic("bell",22)+(S.reminders.length?'<span class="dot"></span>':'')+'</button>'+
+      '<button class="round" data-act="nav" data-s="reminder" aria-label="การแจ้งเตือน">'+ic("bell",22)+(activeReminders().length?'<span class="dot"></span>':'')+'</button>'+
       '<button data-act="openMenu" aria-label="เมนูโปรไฟล์">'+avatarHtml(AVATARS[S.profile.avatar]||AVATARS[0],42)+'</button></div></header>'+
       '<main class="shell">'+body+'</main>'+
       '<nav class="nav-pill" aria-label="เมนูหลัก"><div class="nav-glass">'+navBtn("home","home","หน้าหลัก")+navBtn("check","checksq","Checklist")+navBtn("reminder","bell","Reminder")+'</div></nav>';
@@ -1023,7 +1038,8 @@ document.addEventListener("keydown", function(e){
     if (m==="suggest") runSuggest(S.query); else if (m==="addItem") addItem(); else if (m==="addEditItem") addEditItem(); else if (m==="saveName") saveName();
   }
 });
-document.addEventListener("visibilitychange", function(){ if (!document.hidden && S.user && !S.booting){ loadReminders().then(function(){ syncPush(); render(); }); } });
+document.addEventListener("visibilitychange", function(){ if (!document.hidden && S.user && !S.booting){ loadReminders().then(function(){ syncPush(); dueCheck(); render(); }); } });
+setInterval(dueCheck, 2000);
 
 /* ---------- boot ---------- */
 async function boot(){
@@ -1049,6 +1065,7 @@ async function boot(){
     render();
   }
 }
+if (S.themePref !== "dark") S.themePref = "light";
 applyTheme();
 S.nameDraft = S.profile.name;
 S.gate = isIOS() && !isStandalone() && !LS.get("skipInstall", false);
