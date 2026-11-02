@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Smart Reminder</title>
 <meta name="theme-color" content="#2f6b3f">
 <meta name="mobile-web-app-capable" content="yes">
@@ -176,7 +176,11 @@ main{padding-block:14px 130px;padding-left:max(16px,env(safe-area-inset-left,0px
 .menu-head small{color:var(--muted);font-size:12px}
 .menu-row{display:flex;align-items:center;gap:10px;padding:12px 0;font-weight:600;width:100%;text-align:left;color:var(--text)}
 .menu-row span{flex:1}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:6px;
+}
 .seg button{border-radius:12px;padding:9px 4px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;gap:5px}
 .seg button.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
 .modal{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;width:100%;max-width:440px;max-height:90%;overflow:auto}
@@ -608,6 +612,17 @@ function initPush(){
       loginPush(); syncPush(); render();
     } catch(e){ console.warn("OneSignal init failed", e); }
   });
+  OneSignal.Notifications.addEventListener("foregroundWillDisplay", function(ev){
+  var d = (ev.notification && ev.notification.additionalData) || {};
+
+  if (d.reminderId) {
+    if (typeof ev.preventDefault === "function") {
+      ev.preventDefault();
+    }
+
+    openFromPush(d.reminderId);
+  }
+});
 }
 function pushHint(){
   if (!("Notification" in window)) return "เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน";
@@ -632,8 +647,26 @@ async function disablePush(){
 }
 function togglePush(){ if (S.pushOn) disablePush(); else enablePush(); }
 function openFromPush(id){
-  var r = S.reminders.find(function(x){return x.id===id;});
-  if (r) openChecklistFrom(r, id); else toast("ไม่พบรายการนี้แล้ว");
+  var r = S.reminders.find(function(x){
+    return x.id === id;
+  });
+
+  if (r) {
+    if (r.once) {
+      var stamp = Date.now();
+
+      S.reminders = S.reminders.map(function(x){
+        return x.id === id
+          ? Object.assign({}, x, {sentAt: stamp})
+          : x;
+      });
+    }
+
+    S.menuOpen = false;
+    openChecklistFrom(r, id);
+  } else {
+    toast("ไม่พบรายการนี้แล้ว");
+  }
 }
 function finishOnboarding(){
   var t = pad2(S.obHour)+":"+pad2(S.obMinute);
@@ -700,7 +733,10 @@ function viewHome(){
   var g = greet(), now = new Date(), L = listInfo();
   var sorted = sortedReminders();
   var noneYet = S.reminders.length===0 && S.doneDay!==todayKey();
-  var home = sorted.filter(function(r){ return r.doneOn!==todayKey(); });
+  var home = sorted.filter(function(r){
+  return r.doneOn !== todayKey() &&
+         !(r.once && r.sentAt);
+});
   var todayCount = home.filter(function(r){ var d=reminderNext(r); return d && d.toDateString()===now.toDateString(); }).length;
   var doneCount = L.items.filter(function(_,i){return S.checked[i];}).length;
   var art = noneYet ? "bell" : todayCount>0 ? "checksq" : "coffee";
@@ -810,12 +846,19 @@ function viewSettings(){
     '<div class="label">เปลี่ยนชื่อ</div><div class="inrow"><input class="input" id="nameDraft" data-bind="nameDraft" data-enter="saveName" maxlength="20" value="'+esc(S.nameDraft)+'" placeholder="ชื่อของคุณ"><button class="go" data-act="saveName">บันทึก</button></div>'+
     '<div class="label">โทนแอป</div>'+themeSeg()+
     '<div class="label">การแจ้งเตือน</div><div class="switch-row"><span id="pushLbl">รับแจ้งเตือนเมื่อถึงเวลา</span><button class="switch" role="switch" aria-checked="'+S.pushOn+'" aria-labelledby="pushLbl" data-act="togglePush"></button></div><p class="note" style="margin-top:6px">'+pushHint()+'</p>'+
-    '<div class="label">ข้อมูลของฉัน</div><p class="note">ไม่ต้องสมัครสมาชิก ข้อมูลผูกกับเบราว์เซอร์นี้ ลบทั้งหมดได้ด้วยปุ่มด้านล่าง</p><button class="btn danger" data-act="askDelete">'+ic("trash",18)+'ลบแอปและข้อมูลทั้งหมด</button>'+
+   
     '<button class="btn secondary" style="margin-top:18px" data-act="nav" data-s="home">'+ic("back",18)+'กลับหน้าหลัก</button></section>';
 }
 function themeSeg(){
-  return '<div class="seg">'+[["system","ตามระบบ","monitorsys"],["light","สว่าง","sun"],["dark","มืด","moon"]].map(function(t){
-    return '<button class="'+(S.themePref===t[0]?'on':'')+'" data-act="theme" data-v="'+t[0]+'" aria-pressed="'+(S.themePref===t[0])+'">'+ic(t[2],16)+t[1]+'</button>'; }).join("")+'</div>';
+  return '<div class="seg">'+[
+    ["light","สว่าง","sun"],
+    ["dark","มืด","moon"]
+  ].map(function(t){
+    return '<button class="'+
+      (S.themePref===t[0]?'on':'')+
+      '" data-act="theme" data-v="'+t[0]+'">'+
+      ic(t[2],16)+t[1]+'</button>';
+  }).join("")+'</div>';
 }
 
 function viewOnboarding(){
@@ -979,7 +1022,7 @@ document.addEventListener("keydown", function(e){
     if (m==="suggest") runSuggest(S.query); else if (m==="addItem") addItem(); else if (m==="addEditItem") addEditItem(); else if (m==="saveName") saveName();
   }
 });
-document.addEventListener("visibilitychange", function(){ if (!document.hidden && S.user && !S.booting){ loadReminders().then(function(){ syncPush(); render(); }); } });
+document.addEventListener("visibilitychange", function(){ if (!document.hidden && S.user && !S.booting){ loadReminders().then(function(){ syncPush(); render(); }) ; } });
 
 /* ---------- boot ---------- */
 async function boot(){
