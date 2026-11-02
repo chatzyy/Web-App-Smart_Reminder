@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Smart Reminder</title>
 <meta name="theme-color" content="#2f6b3f">
 <meta name="mobile-web-app-capable" content="yes">
@@ -612,17 +612,6 @@ function initPush(){
       loginPush(); syncPush(); render();
     } catch(e){ console.warn("OneSignal init failed", e); }
   });
-  OneSignal.Notifications.addEventListener("foregroundWillDisplay", function(ev){
-  var d = (ev.notification && ev.notification.additionalData) || {};
-
-  if (d.reminderId) {
-    if (typeof ev.preventDefault === "function") {
-      ev.preventDefault();
-    }
-
-    openFromPush(d.reminderId);
-  }
-});
 }
 function pushHint(){
   if (!("Notification" in window)) return "เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน";
@@ -647,26 +636,8 @@ async function disablePush(){
 }
 function togglePush(){ if (S.pushOn) disablePush(); else enablePush(); }
 function openFromPush(id){
-  var r = S.reminders.find(function(x){
-    return x.id === id;
-  });
-
-  if (r) {
-    if (r.once) {
-      var stamp = Date.now();
-
-      S.reminders = S.reminders.map(function(x){
-        return x.id === id
-          ? Object.assign({}, x, {sentAt: stamp})
-          : x;
-      });
-    }
-
-    S.menuOpen = false;
-    openChecklistFrom(r, id);
-  } else {
-    toast("ไม่พบรายการนี้แล้ว");
-  }
+  var r = S.reminders.find(function(x){return x.id===id;});
+  if (r) openChecklistFrom(r, id); else toast("ไม่พบรายการนี้แล้ว");
 }
 function finishOnboarding(){
   var t = pad2(S.obHour)+":"+pad2(S.obMinute);
