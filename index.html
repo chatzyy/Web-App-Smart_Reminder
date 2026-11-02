@@ -370,7 +370,7 @@ function daysLabel(days){ return days.length===7 ? "ทุกวัน" : DAYS.f
 var S = {
   screen:"home",
   profile: LS.get("profile",{name:"ผู้ใช้",avatar:0}),
-  themePref: LS.get("themePref","light"),
+  themePref: LS.get("themePref","system"),
   reminders: [], user:null, booting:true, bootError:"", gate:false, pushOn:false, confirmDelete:false, deleting:false,
   customItems: LS.get("customItems",{}),
   removedItems: LS.get("removedItems",{}),
