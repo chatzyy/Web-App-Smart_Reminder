@@ -85,7 +85,11 @@ main{padding-block:14px 130px;padding-left:max(16px,env(safe-area-inset-left,0px
 /* รูปบนการ์ดทักทาย: อยู่กลางการ์ด กว้างเต็มการ์ด แต่ไม่เกิน --hero-img (ลดเลขถ้าอยากให้เล็กลง) */
 .hero{--hero-img:400px}
 .hero .art img{display:block;width:100%;max-width:var(--hero-img);height:auto;max-height:none;object-fit:contain}
-:root[data-theme="light"] .hero .art{mix-blend-mode:multiply} /* พื้นขาวของรูปกลืนไปกับสีการ์ด (โหมดสว่าง) */
+/* เมื่อมีรูป: ให้สีการ์ดเท่ากับสีพื้นของรูป (แก้ที่ --hero-bg-img ถ้าสีพื้นรูปต่างไป) ตัวอักษรใช้สีเข้มทั้งสองโหมด */
+.hero{--hero-bg-img:#f1f9ee}
+.hero:has(.art.has-img:not(.noimg)){background:var(--hero-bg-img)}
+.hero:has(.art.has-img:not(.noimg)) .greet{color:#1f2a24}
+.hero:has(.art.has-img:not(.noimg)) p{color:#3e5446}
 .hero .greet,.hero p{position:relative;z-index:1}
 .hero .art{z-index:0}
 .hero .art .fb{display:none}
