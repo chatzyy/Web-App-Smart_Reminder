@@ -81,10 +81,11 @@ main{padding-block:14px 130px;padding-left:max(16px,env(safe-area-inset-left,0px
 .hero p{font-size:13px;color:var(--hero-text);margin-top:4px;line-height:1.6;max-width:90%}
 .hero .art{position:absolute;right:-6px;bottom:-8px;opacity:.9;color:var(--primary)}
 .hero .art .ic{width:92px;height:92px;stroke-width:1.2}
-.hero .art.has-img{right:8px;bottom:0;opacity:1}
-/* ปรับขนาดรูปบนการ์ดทักทายที่ --hero-img (ตอนนี้ 100px) */
-.hero{--hero-img:100px}
-.hero .art img{display:block;width:auto;height:auto;max-width:var(--hero-img);max-height:var(--hero-img);object-fit:contain}
+.hero .art.has-img{position:static;display:flex;justify-content:center;width:100%;margin-top:8px;opacity:1}
+/* รูปบนการ์ดทักทาย: อยู่กลางการ์ด กว้างเต็มการ์ด แต่ไม่เกิน --hero-img (ลดเลขถ้าอยากให้เล็กลง) */
+.hero{--hero-img:400px}
+.hero .art img{display:block;width:100%;max-width:var(--hero-img);height:auto;max-height:none;object-fit:contain}
+:root[data-theme="light"] .hero .art{mix-blend-mode:multiply} /* พื้นขาวของรูปกลืนไปกับสีการ์ด (โหมดสว่าง) */
 .hero .greet,.hero p{position:relative;z-index:1}
 .hero .art{z-index:0}
 .hero .art .fb{display:none}
