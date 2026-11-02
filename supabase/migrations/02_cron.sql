@@ -3,8 +3,8 @@
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
-select vault.create_secret('https://wozijmernlstkzriycch.supabase.co', 'project_url');
-select vault.create_secret('c2cca3de878e27b393046996db0e031e725bd5efd8e19992', 'cron_secret');
+select vault.create_secret('https://YOUR-PROJECT-REF.supabase.co', 'project_url');
+select vault.create_secret('YOUR-CRON-SECRET', 'cron_secret');
 
 -- 2) ให้เรียก send-due ทุกนาที
 select cron.schedule(
