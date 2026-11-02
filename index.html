@@ -81,6 +81,16 @@ main{padding-block:14px 130px;padding-left:max(16px,env(safe-area-inset-left,0px
 .hero p{font-size:13px;color:var(--hero-text);margin-top:4px;line-height:1.6;max-width:90%}
 .hero .art{position:absolute;right:-6px;bottom:-8px;opacity:.9;color:var(--primary)}
 .hero .art .ic{width:92px;height:92px;stroke-width:1.2}
+.hero .art.has-img{right:8px;bottom:0;opacity:1}
+/* ปรับขนาดรูปบนการ์ดทักทายที่ --hero-img (ตอนนี้ 100px) */
+.hero{--hero-img:100px}
+.hero .art img{display:block;width:auto;height:auto;max-width:var(--hero-img);max-height:var(--hero-img);object-fit:contain}
+.hero .greet,.hero p{position:relative;z-index:1}
+.hero .art{z-index:0}
+.hero .art .fb{display:none}
+.hero .art.noimg .fb{display:block}
+.hero .art.noimg img{display:none}
+.brand-logo{width:30px;height:30px;border-radius:8px;display:block;flex:none}
 .sum{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px;min-width:0}
 .sum h3{font-size:15px}
 .sum .sub{font-size:12px;color:var(--muted);margin:2px 0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -756,8 +766,9 @@ function viewHome(){
   var todayCount = home.filter(function(r){ var d=reminderNext(r); return d && d.toDateString()===now.toDateString(); }).length;
   var doneCount = L.items.filter(function(_,i){return S.checked[i];}).length;
   var art = noneYet ? "bell" : todayCount>0 ? "checksq" : "coffee";
+  var heroImg = noneYet ? "/assets/hero-empty.png" : todayCount>0 ? "/assets/hero-todo.png" : "/assets/hero-rest.png";
   var sub = noneYet ? "ยังไม่มีเรื่องที่ต้องทำเลย ลองตั้งการแจ้งเตือนไว้ จะได้ไม่ลืมของสำคัญนะ" : todayCount>0 ? "วันนี้มี "+todayCount+" เรื่องที่ต้องทำ" : "วันนี้ไม่มีเรื่องต้องทำแล้ว พักผ่อนได้";
-  var h = '<div class="top-row"><div class="hero'+(noneYet?' tall':'')+'"><div class="greet">'+g.text+'<span style="color:'+g.color+'">'+ic(g.icon,20)+'</span></div><p>'+sub+'</p><div class="art">'+ic(art,92,1.2)+'</div></div>'+
+  var h = '<div class="top-row"><div class="hero'+(noneYet?' tall':'')+'"><div class="greet">'+g.text+'<span style="color:'+g.color+'">'+ic(g.icon,20)+'</span></div><p>'+sub+'</p><div class="art has-img"><img src="'+heroImg+'" alt="" onerror="this.parentNode.classList.add(\'noimg\')"><span class="fb">'+ic(art,92,1.2)+'</span></div></div>'+
     '<div class="sum"><h3>ภาพรวมวันนี้</h3><div class="sub">'+esc(S.current.title||S.current.name)+'</div>'+
     '<div class="sum-row"><i style="background:#b9c8bc"></i><span>ทั้งหมด</span><b>'+L.items.length+'</b></div>'+
     '<div class="sum-row"><i style="background:var(--primary)"></i><span>เสร็จแล้ว</span><b>'+doneCount+'</b></div>'+
@@ -952,7 +963,7 @@ function render(opts){
     html = '<main style="min-height:100vh;justify-content:center;padding-block:24px">'+viewOnboarding()+'</main>';
   } else {
     var body = S.screen==="home" ? viewHome() : S.screen==="check" ? viewCheck() : S.screen==="reminder" ? viewReminder() : viewSettings();
-    html = '<header class="header"><div class="header-in"><div class="brand"><h1><span style="color:var(--primary);display:flex">'+ic("phone",24)+'</span>Smart Reminder</h1><p>คิดก่อนลืม — ผู้ช่วยเตรียมตัวอัจฉริยะ</p></div>'+
+    html = '<header class="header"><div class="header-in"><div class="brand"><h1><img class="brand-logo" src="/icons/icon-192.png" alt="">Smart Reminder</h1><p>คิดก่อนลืม — ผู้ช่วยเตรียมตัวอัจฉริยะ</p></div>'+
       '<button class="round" data-act="nav" data-s="reminder" aria-label="การแจ้งเตือน">'+ic("bell",22)+(activeReminders().length?'<span class="dot"></span>':'')+'</button>'+
       '<button data-act="openMenu" aria-label="เมนูโปรไฟล์">'+avatarHtml(AVATARS[S.profile.avatar]||AVATARS[0],42)+'</button></div></header>'+
       '<main class="shell">'+body+'</main>'+
