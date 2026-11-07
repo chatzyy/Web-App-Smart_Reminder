@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Smart Reminder</title>
-<meta name="theme-color" content="#2f6b3f">
+<meta name="theme-color" content="#14246b">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Smart Reminder">
@@ -13,26 +13,26 @@
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=Prompt:wght@600;700&display=swap">
 <style>
-/* Layout: single-column mobile app, sticky header, floating glass nav pill at the bottom. Green palette carried over from the original app. */
+/* Layout: single-column mobile app, sticky header, floating glass nav pill at the bottom. Navy + cyan palette matched to the presentation slides. */
 :root{
-  --bg:#f3f8f2; --header:#eaf4e8; --primary:#2f6b3f; --on-primary:#ffffff; --soft:#e6f2e4; --text:#1f2a24; --muted:#657469;
-  --line:#e3ece2; --card:#ffffff; --field:#fafcfa; --chip:#eef6ec; --tint:#f0faf5; --hero:#eef7ec; --hero-text:#3e5446;
-  --wheel-muted:#a7b4aa; --faint:#7f8c84; --switch-off:#d0d5dd; --danger:#d4614a; --warn-bg:#fff4e5; --warn-line:#f5c26b; --warn-text:#8a5a00;
-  --nav-bg:rgba(255,255,255,.72); --nav-line:rgba(255,255,255,.8); --nav-on:rgba(47,107,63,.16); --scrim:rgba(0,0,0,.35);
-  --shadow:0 8px 24px rgba(20,40,28,.16);
+  --bg:#f1f5fc; --header:#e6eefb; --primary:#14246b; --on-primary:#ffffff; --soft:#e0f6fa; --text:#0e1633; --muted:#5b6785;
+  --line:#dde5f3; --card:#ffffff; --field:#f8faff; --chip:#e4f5fa; --tint:#eaf8fb; --hero:#e9f5fb; --hero-text:#34456e;
+  --wheel-muted:#a3aecb; --faint:#7782a1; --switch-off:#d0d5dd; --danger:#d4614a; --warn-bg:#fff4e5; --warn-line:#f5c26b; --warn-text:#8a5a00;
+  --nav-bg:rgba(255,255,255,.72); --nav-line:rgba(255,255,255,.8); --nav-on:rgba(20,36,107,.14); --scrim:rgba(0,0,0,.35);
+  --shadow:0 8px 24px rgba(10,20,64,.18);
   --font-display:"Prompt","Noto Sans Thai",system-ui,sans-serif; --font-body:"Noto Sans Thai",system-ui,-apple-system,sans-serif;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#121a15; --header:#18231c; --primary:#46a463; --on-primary:#0c1710; --soft:#24352a; --text:#e8f0ea; --muted:#9db0a3;
-  --line:#2a3a2f; --card:#1b2620; --field:#16201a; --chip:#24352a; --tint:#1f2e25; --hero:#21402c; --hero-text:#c5d9cb;
-  --wheel-muted:#4f6355; --faint:#7d8f83; --switch-off:#3a4a3f; --danger:#e8806a; --warn-bg:#33291a; --warn-line:#6b5420; --warn-text:#f0c987;
-  --nav-bg:rgba(30,42,34,.7); --nav-line:rgba(255,255,255,.16); --nav-on:rgba(255,255,255,.18); --scrim:rgba(0,0,0,.6);
+  --bg:#070c28; --header:#0b1238; --primary:#2de2e6; --on-primary:#04112e; --soft:#14214f; --text:#eaf2ff; --muted:#9aa9d1;
+  --line:#1c2860; --card:#0f1840; --field:#0b1236; --chip:#15235a; --tint:#122050; --hero:#142a63; --hero-text:#c3d0f0;
+  --wheel-muted:#3f4d85; --faint:#7886b5; --switch-off:#2a3566; --danger:#e8806a; --warn-bg:#33291a; --warn-line:#6b5420; --warn-text:#f0c987;
+  --nav-bg:rgba(15,24,64,.72); --nav-line:rgba(255,255,255,.16); --nav-on:rgba(45,226,230,.18); --scrim:rgba(0,0,0,.6);
   --shadow:0 8px 24px rgba(0,0,0,.5); color-scheme:dark } }
 :root[data-theme="dark"]{
-  --bg:#121a15; --header:#18231c; --primary:#46a463; --on-primary:#0c1710; --soft:#24352a; --text:#e8f0ea; --muted:#9db0a3;
-  --line:#2a3a2f; --card:#1b2620; --field:#16201a; --chip:#24352a; --tint:#1f2e25; --hero:#21402c; --hero-text:#c5d9cb;
-  --wheel-muted:#4f6355; --faint:#7d8f83; --switch-off:#3a4a3f; --danger:#e8806a; --warn-bg:#33291a; --warn-line:#6b5420; --warn-text:#f0c987;
-  --nav-bg:rgba(30,42,34,.7); --nav-line:rgba(255,255,255,.16); --nav-on:rgba(255,255,255,.18); --scrim:rgba(0,0,0,.6);
+  --bg:#070c28; --header:#0b1238; --primary:#2de2e6; --on-primary:#04112e; --soft:#14214f; --text:#eaf2ff; --muted:#9aa9d1;
+  --line:#1c2860; --card:#0f1840; --field:#0b1236; --chip:#15235a; --tint:#122050; --hero:#142a63; --hero-text:#c3d0f0;
+  --wheel-muted:#3f4d85; --faint:#7886b5; --switch-off:#2a3566; --danger:#e8806a; --warn-bg:#33291a; --warn-line:#6b5420; --warn-text:#f0c987;
+  --nav-bg:rgba(15,24,64,.72); --nav-line:rgba(255,255,255,.16); --nav-on:rgba(45,226,230,.18); --scrim:rgba(0,0,0,.6);
   --shadow:0 8px 24px rgba(0,0,0,.5); color-scheme:dark }
 
 *{box-sizing:border-box}
@@ -75,7 +75,7 @@ main{padding-block:14px 130px;padding-left:max(16px,env(safe-area-inset-left,0px
 .top-row{display:grid;grid-template-columns:1.15fr 1fr;gap:10px}
 .hero{position:relative;overflow:hidden;background:var(--hero);border-radius:20px;padding:14px;min-height:175px;min-width:0}
 .hero.tall{min-height:215px}
-.hero .greet{display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:17px;color:#1f2a24}
+.hero .greet{display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:17px;color:#0e1633}
 :root[data-theme="dark"] .hero .greet,:root[data-theme="dark"] .hero p{color:var(--text)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hero .greet,:root:not([data-theme="light"]) .hero p{color:var(--text)}}
 .hero p{font-size:13px;color:var(--hero-text);margin-top:4px;line-height:1.6;max-width:90%}
@@ -86,10 +86,10 @@ main{padding-block:14px 130px;padding-left:max(16px,env(safe-area-inset-left,0px
 .hero{--hero-img:400px}
 .hero .art img{display:block;width:100%;max-width:var(--hero-img);height:auto;max-height:none;object-fit:contain}
 /* เมื่อมีรูป: ให้สีการ์ดเท่ากับสีพื้นของรูป (แก้ที่ --hero-bg-img ถ้าสีพื้นรูปต่างไป) ตัวอักษรใช้สีเข้มทั้งสองโหมด */
-.hero{--hero-bg-img:#f1f9ee}
+.hero{--hero-bg-img:#e9f5fb}
 .hero:has(.art.has-img:not(.noimg)){background:var(--hero-bg-img)}
-.hero:has(.art.has-img:not(.noimg)) .greet{color:#1f2a24}
-.hero:has(.art.has-img:not(.noimg)) p{color:#3e5446}
+.hero:has(.art.has-img:not(.noimg)) .greet{color:#0e1633}
+.hero:has(.art.has-img:not(.noimg)) p{color:#34456e}
 .hero .greet,.hero p{position:relative;z-index:1}
 .hero .art{z-index:0}
 .hero .art .fb{display:none}
@@ -216,7 +216,7 @@ main{padding-block:14px 130px;padding-left:max(16px,env(safe-area-inset-left,0px
 .ob-hero i{position:absolute;border-radius:50%;background:var(--soft)}
 .ob-hero i:nth-child(1){width:170px;height:170px;opacity:.55}
 .ob-hero i:nth-child(2){width:132px;height:132px}
-.ob-hero .core{position:relative;width:94px;height:94px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;box-shadow:0 6px 14px rgba(47,107,63,.35)}
+.ob-hero .core{position:relative;width:94px;height:94px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;box-shadow:0 6px 14px rgba(20,36,107,.35)}
 .feat{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px}
 .step{display:flex;align-items:center;gap:12px;margin:12px 0;text-align:left}
 .step .si{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;flex:none;position:relative}
@@ -297,7 +297,7 @@ function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(
 /* ---------- constants ---------- */
 var LIGHT_SWITCH = null;
 var ACTIVITIES = [
-  { name:"เรียน", icon:"book", bg:"#e3f1e2", fg:"#2f6b3f" },
+  { name:"เรียน", icon:"book", bg:"#dff6fa", fg:"#14246b" },
   { name:"ทำงาน", icon:"brief", bg:"#fdebd8", fg:"#b8681a" },
   { name:"เดินทาง", icon:"plane", bg:"#e1edf9", fg:"#2f6fb0" },
   { name:"ออกกำลังกาย", icon:"run", bg:"#efe6f8", fg:"#7c4dbb" }
@@ -324,7 +324,7 @@ var MAIN_KEYS = {
 };
 var GENERIC_ITEMS = ["โทรศัพท์","กระเป๋าสตางค์","กุญแจ","ที่ชาร์จ"];
 var AVATARS = [
-  {icon:"user",bg:"#e3f1e2",fg:"#2f6b3f"},{icon:"smile",bg:"#fdebd8",fg:"#b8681a"},{icon:"leaf",bg:"#dff0dc",fg:"#3d8b4f"},{icon:"coffee",bg:"#efe6f8",fg:"#7c4dbb"},
+  {icon:"user",bg:"#dff6fa",fg:"#14246b"},{icon:"smile",bg:"#fdebd8",fg:"#b8681a"},{icon:"leaf",bg:"#e0f6fa",fg:"#0e8fa3"},{icon:"coffee",bg:"#efe6f8",fg:"#7c4dbb"},
   {icon:"zap",bg:"#e1edf9",fg:"#2f6fb0"},{icon:"star",bg:"#fff3cf",fg:"#a87a0c"},{icon:"heart",bg:"#fde3e1",fg:"#c24540"},{icon:"globe",bg:"#e0f3f1",fg:"#1f8a83"}
 ];
 function iconOf(name){ for (var i=0;i<ACTIVITIES.length;i++) if (ACTIVITIES[i].name===name) return ACTIVITIES[i].icon; for (var j=0;j<EXTRA.length;j++) if (EXTRA[j].name===name) return EXTRA[j].icon; return "list"; }
@@ -775,7 +775,7 @@ function viewHome(){
   var sub = noneYet ? "ยังไม่มีเรื่องที่ต้องทำเลย ลองตั้งการแจ้งเตือนไว้ จะได้ไม่ลืมของสำคัญนะ" : todayCount>0 ? "วันนี้มี "+todayCount+" เรื่องที่ต้องทำ" : "วันนี้ไม่มีเรื่องต้องทำแล้ว พักผ่อนได้";
   var h = '<div class="top-row"><div class="hero'+(noneYet?' tall':'')+'"><div class="greet">'+g.text+'<span style="color:'+g.color+'">'+ic(g.icon,20)+'</span></div><p>'+sub+'</p><div class="art has-img"><img src="'+heroImg+'" alt="" onerror="this.parentNode.classList.add(\'noimg\')"><span class="fb">'+ic(art,92,1.2)+'</span></div></div>'+
     '<div class="sum"><h3>ภาพรวมวันนี้</h3><div class="sub">'+esc(S.current.title||S.current.name)+'</div>'+
-    '<div class="sum-row"><i style="background:#b9c8bc"></i><span>ทั้งหมด</span><b>'+L.items.length+'</b></div>'+
+    '<div class="sum-row"><i style="background:#b3bddb"></i><span>ทั้งหมด</span><b>'+L.items.length+'</b></div>'+
     '<div class="sum-row"><i style="background:var(--primary)"></i><span>เสร็จแล้ว</span><b>'+doneCount+'</b></div>'+
     '<div class="sum-row"><i style="background:var(--danger)"></i><span>คงเหลือ</span><b>'+(L.items.length-doneCount)+'</b></div></div></div>';
 
@@ -903,7 +903,7 @@ function viewOnboarding(){
       dots+'<button class="btn primary" data-act="obGo" data-to="1">เริ่มเลย</button></section>';
   }
   if (S.obStep===1){
-    var steps = [["list","#e3f1e2","#2f6b3f","เลือกกิจกรรมของวัน หรือพิมพ์เองแล้วให้ระบบแนะนำของที่ต้องเตรียม"],["checksq","#e1edf9","#2f6fb0","ติ๊กของใน Checklist เพิ่มหรือลบรายการได้ตามต้องการ"],["clock","#fdebd8","#b8681a","ตั้ง Reminder ได้หลายรายการ แอปจะแจ้งเตือนตามวันและเวลาที่เลือก"],["chart","#efe6f8","#7c4dbb","ดูสถิติ \"สิ่งที่มักลืม\" ในหน้าหลัก"]];
+    var steps = [["list","#dff6fa","#14246b","เลือกกิจกรรมของวัน หรือพิมพ์เองแล้วให้ระบบแนะนำของที่ต้องเตรียม"],["checksq","#e1edf9","#2f6fb0","ติ๊กของใน Checklist เพิ่มหรือลบรายการได้ตามต้องการ"],["clock","#fdebd8","#b8681a","ตั้ง Reminder ได้หลายรายการ แอปจะแจ้งเตือนตามวันและเวลาที่เลือก"],["chart","#efe6f8","#7c4dbb","ดูสถิติ \"สิ่งที่มักลืม\" ในหน้าหลัก"]];
     return '<section class="card ob"><h2 style="display:flex;justify-content:center;align-items:center;gap:8px">'+ic("zap",22)+'แอปนี้ทำงานยังไง?</h2>'+
       steps.map(function(s,i){ return '<div class="step"><span class="si" style="background:'+s[1]+';color:'+s[2]+'">'+ic(s[0],20)+'<b>'+(i+1)+'</b></span><span>'+s[3]+'</span></div>'; }).join("")+
       '<div class="perm"><div style="display:flex;align-items:center;gap:8px;font-weight:700;color:var(--primary);margin-bottom:4px">'+ic("bell",18)+'ขออนุญาตแจ้งเตือน</div><p class="p">เซิร์ฟเวอร์จะส่งแจ้งเตือนตามเวลาที่ตั้งไว้ แม้คุณปิดหน้านี้ไปแล้ว</p>'+
